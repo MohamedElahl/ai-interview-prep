@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Content self-test</title>
+<style>body{font:14px/1.5 ui-monospace,Consolas,monospace;padding:16px}.bad{color:#b3382c}.ok{color:#23794a}</style></head>
+<body>
+<h1>Content self-test</h1>
+<p>Runs every reference solution against its tests, and checks every starter does not already pass. For maintainers.</p>
+<pre id="log">Running…</pre>
+<script type="module">
+import { TOPICS, loadLesson } from './js/content.js';
+import { runPython, gradeSql } from './js/runner.js';
+const log = document.getElementById('log'); const lines = []; let bad = 0, n = 0;
+const say = (ok, msg) => { if (!ok) bad++; lines.push((ok ? 'ok   ' : 'FAIL ') + msg); log.textContent = lines.join('\n'); };
+const ids = new Set();
+for (const t of TOPICS) {
+  if (ids.has(t.id)) say(false, 'duplicate topic id ' + t.id); ids.add(t.id);
+  const lesson = await loadLesson(t);
+  if (lesson.length < 200) say(false, `${t.id}: lesson missing or too short`);
+  t.quiz.forEach((q, i) => { if (!(q.answer >= 0 && q.answer < q.options.length) || !q.why) say(false, `${t.id}: quiz ${i} invalid`); });
+  t.interview.forEach((q, i) => { if (!q.points?.length || !q.model) say(false, `${t.id}: interview ${i} invalid`); });
+  for (const task of t.tasks) {
+    n++;
+    if (ids.has(task.id)) say(false, 'duplicate task id ' + task.id); ids.add(task.id);
+    if (task.lang === 'sql') {
+      const good = await gradeSql(task, task.solution), start = await gradeSql(task, task.starter);
+      say(good.tests.every(x => x.ok), `${task.id} solution: ${good.tests.map(x => x.ok ? 'pass' : 'FAIL ' + x.msg).join(', ')}`);
+      say(!start.tests.every(x => x.ok), `${task.id} starter does not pass`);
+    } else {
+      const good = await runPython(task.solution, task.tests);
+      const fails = (good.tests || []).filter(x => !x.ok);
+      say(!good.fatal && !good.timeout && !good.error && good.tests?.length === task.tests.length && !fails.length,
+        `${task.id} solution: ${good.fatal || (good.timeout && 'timeout') || good.error || (fails.length ? fails.map(x => x.name + ' -> ' + x.msg).join(' | ') : good.tests.length + ' tests pass')}`);
+      const start = await runPython(task.starter, task.tests);
+      say(!(start.tests?.length && start.tests.every(x => x.ok)), `${task.id} starter does not pass`);
+    }
+  }
+}
+lines.push('', `DONE: ${TOPICS.length} topics, ${n} tasks, ${bad} problem(s)`);
+log.textContent = lines.join('\n');
+log.className = bad ? 'bad' : 'ok';
+</script>
+</body></html>
