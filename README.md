@@ -6,12 +6,14 @@ Each topic has a short lesson, coding tasks with automatic tests, a quiz and int
 
 ## What is inside
 
-- **28 topics** in 8 modules: foundations, core ML, deep learning, GenAI and LLMs, MLOps and system design, computer vision and NLP, sensor fusion and perception, and interview skills.
-- **56 coding tasks** in Python and SQL that run in the browser, with visible and hidden tests.
-- **Interactive demos** inside lessons: gradient descent, decision thresholds, graph search, convolution filters, box overlap, token sampling, a sensor coverage scene and a radar-camera Kalman filter.
+- **38 topics** in 11 modules: foundations, core ML, deep learning, time series and sequence models, GenAI and LLMs, AI agents, MLOps and system design, deployment (C++, GPU, ECU, cloud), computer vision and NLP, sensor fusion and perception, and interview skills.
+- **A learning path for every topic**, from zero to interview level: more than 1,200 bite-size steps with instant feedback. Exercise types include multiple choice, true or false, fill the blank, type the answer, put code lines in order and match pairs. Steps you miss come back, and are collected in a review pile.
+- **XP, levels, a daily goal and streaks** to keep a daily habit.
+- **78 coding tasks** in Python and SQL that run in the browser, with visible and hidden tests.
+- **Interactive demos** inside summaries: gradient descent, decision thresholds, graph search, convolution filters, box overlap, token sampling, a sensor coverage scene and a radar-camera Kalman filter.
 - **Voice mock interview**: questions are read aloud, you answer by speaking, and you get a score, the key points you covered, pace and filler-word counts, and a model answer.
 - **Role tracks**: ML Engineer, Data Scientist, GenAI / LLM Engineer, MLOps, NLP, Computer Vision, Automotive / Perception, Data Analyst.
-- **Optional AI interviewer** with follow-up questions and written feedback, using your own key for Groq, Google Gemini or OpenRouter, a local Ollama model, or any OpenAI-compatible endpoint.
+- **Optional AI provider** for unlimited extra exercises, an interviewer with follow-up questions, and code hints. Use your own key for Groq, Google Gemini or OpenRouter, a local Ollama model, or any OpenAI-compatible endpoint.
 
 ## Privacy
 
@@ -34,8 +36,9 @@ Everything works in current Chrome, Edge, Firefox and Safari. Answering by voice
 ## Add or edit a topic
 
 1. Add a topic object to the matching file in `content/` (for example `content/ml.js`): `id`, `title`, `tracks`, and any of `tasks`, `quiz`, `interview`.
-2. Add a `=== your-topic-id ===` section with the lesson in Markdown to the `.md` file with the same name.
-3. Open `selftest.html` in the browser. It runs every reference solution against its tests and reports problems.
+2. Add a `=== your-topic-id ===` section with the summary in Markdown to the `.md` file with the same name.
+3. Add a learning path under the same topic id in `content/paths/`, built with the helpers in `content/_h.js` (`L`, `info`, `mc`, `tf`, `fill`, `fillc`, `type`, `order`, `match`). For `mc` and `fill` the first option is the correct one; options are shuffled when shown.
+4. Open `selftest.html` in the browser. It runs every reference solution against its tests and reports problems.
 
 A Python task has `prompt`, `starter`, `solution` and `tests` (each test is Python code using `assert`; a helper `close(a, b, tol)` compares numbers, lists and arrays). An SQL task has `lang: 'sql'`, `setup`, optional `hiddenSetup`, `starter` and `solution`.
 

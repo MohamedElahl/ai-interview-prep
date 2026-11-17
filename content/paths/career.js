@@ -1,3 +1,90 @@
 import { L, info, mc, tf, fill, fillc, type, order, match } from '../_h.js';
 
-export default {};
+export default {
+  behavioral: [
+    L('What they are really asking',
+      info('Past behaviour predicts future behaviour', 'Behavioural questions start with "Tell me about a time when…". The interviewer is not after the story. They are collecting evidence of **ownership**, **communication**, **teamwork** and **judgement**.\n\nA good answer is specific, shows what **you** did, and ends with a result.'),
+      match('Match the question to what it tests', [['"Tell me about a conflict"', 'Collaboration and maturity'], ['"A time you failed"', 'Ownership and learning'], ['"A tight deadline"', 'Prioritisation'], ['"Explain X to a non-expert"', 'Communication']]),
+      mc('Which opening is strongest for "Tell me about a challenging project"?', ['"On a radar project last year, our model was too slow for the target chip…"', '"I am a hard worker who loves challenges."', '"Projects are generally challenging."', '"I cannot think of one."'], 'Specific and concrete from the first sentence.'),
+      mc('Why say "I" instead of "we"?', ['The interviewer needs to know your own contribution', 'To take credit for everything', 'Because teams are bad', 'It is shorter'], 'Credit the team, but make your part clear.'),
+      tf('It is fine to answer a behavioural question with a general opinion instead of a real example.', false, 'They want evidence from something that happened.'),
+      mc('How long should a behavioural answer be?', ['About two minutes', 'Ten minutes', 'Ten seconds', 'As long as possible'], 'Long enough for detail, short enough to stay sharp.'),
+      mc('You do not have an example for the exact question. Best move?', ['Offer the closest real example and say how it relates', 'Invent a story', 'Say "no" and stop', 'Change the subject'], 'Honesty with a relevant example beats fiction.'),
+      mc('What should you prepare before any interview?', ['Five or six stories you can adapt to many questions', 'Nothing', 'A script to read aloud', 'Only technical answers'], 'One story can serve several questions.')),
+
+    L('The STAR method',
+      info('Four parts', '**S**ituation: the context, in a sentence or two.\n\n**T**ask: what you had to achieve.\n\n**A**ction: what **you** did and why. This is most of the answer.\n\n**R**esult: what happened, with a number, and what you learned.'),
+      order('Order the STAR method', ['Situation', 'Task', 'Action', 'Result'], 'Context, goal, what you did, outcome.'),
+      match('Match the sentence to its STAR part', [['"The model missed the 33 ms budget on the target chip."', 'Situation'], ['"I had to cut inference time by half in three weeks."', 'Task'], ['"I profiled it, quantised the model and moved resize to the GPU."', 'Action'], ['"Latency fell from 60 ms to 24 ms with a 0.4% accuracy loss."', 'Result']]),
+      mc('Which part deserves the most time?', ['Action', 'Situation', 'Task', 'None'], 'It shows your skill and judgement.'),
+      mc('Which result is strongest?', ['"Latency fell from 120 ms to 45 ms, which let us ship on the cheaper chip."', '"It went well."', '"Everyone was happy."', '"We finished."'], 'A number against a baseline, and why it mattered.'),
+      mc('You have no number for the result. What then?', ['Give a concrete observable outcome', 'Invent a number', 'Skip the result', 'Apologise'], 'For example "the customer extended the contract".'),
+      tf('Explaining why you chose an approach over the alternatives strengthens the Action part.', true, 'It reveals judgement.'),
+      mc('A common mistake in STAR answers?', ['Spending most of the time on the situation', 'Giving a result', 'Saying "I"', 'Being specific'], 'Keep the context to two or three sentences.')),
+
+    L('Your CV as a set of stories',
+      info('Every line is a question', 'Anything on your CV can be asked about, to any depth. For each line prepare:\n\n- the **goal** and the **constraint**\n- what **you** built\n- **why** that approach\n- how you **measured** success\n- what went **wrong** and what you would change'),
+      order('Order "Tell me about yourself" (about 90 seconds)', ['Present: your current role and focus', 'Past: two relevant achievements with results', 'Future: why this role and company'], 'Present, past, future.'),
+      mc('"Tell me about yourself" is best answered by…', ['A 90-second summary linking your experience to this job', 'Reading your CV aloud', 'Your life story from school', 'A single sentence'], 'Give hooks for follow-up questions.'),
+      mc('A CV line says "Improved model performance". What is missing?', ['By how much, measured how, and compared with what', 'More adjectives', 'A photo', 'Nothing'], 'Quantify: "raised F1 from 0.81 to 0.90".'),
+      mc('You list a technology you used once, two years ago. An interviewer digs in. Lesson?', ['Only list what you can discuss in depth', 'List everything', 'Deny it', 'Change the topic'], 'Each line is an invitation.'),
+      mc('"Which project are you most proud of?" Pick the one that…', ['You can discuss in detail and that matches this role', 'Sounds the most complicated', 'Was the longest', 'Someone else led'], 'Depth and relevance.'),
+      mc('Asked "what was the hardest bug?", a strong answer includes…', ['How you narrowed it down, the root cause and the fix', 'Blaming a colleague', 'That there were no bugs', 'A joke'], 'Show your debugging method.'),
+      tf('Teaching or mentoring experience is good evidence of communication skill.', true, 'Mention it when asked how you explain technical work.')),
+
+    L('Hard questions and closing well',
+      info('Failure, conflict, weakness', '**Failure:** choose a real one with a recovery. Own your part. End with what changed in how you work.\n\n**Conflict:** describe both sides fairly; show you listened and used evidence.\n\n**Weakness:** a real, non-critical one plus what you are doing about it.'),
+      mc('Best answer to "What is your biggest weakness?"', ['A genuine weakness with a concrete improvement plan', '"I work too hard."', '"I have none."', '"I am always late."'], 'Self-awareness plus action.'),
+      mc('In a "disagreement" story, how should you describe the other person?', ['Fairly, explaining their reasoning', 'As incompetent', 'Not at all', 'As an enemy'], 'They are judging how you will treat colleagues.'),
+      mc('How did the disagreement get resolved, in a strong answer?', ['With evidence: data, an experiment or a prototype', 'By shouting', 'By going to the CEO first', 'It was not'], 'Move from opinion to evidence.'),
+      mc('A failure story should end with…', ['What you do differently now', 'An excuse', 'Blame', 'Silence'], 'Learning is the point.'),
+      info('Your questions', 'At the end you will be asked "Any questions for us?". "No" sounds uninterested. Prepare a few:\n\n- What does success look like in the first six months?\n- How does the team decide what to build and how to evaluate it?\n- What is the hardest problem the team has now?'),
+      mc('Which is a good question to ask the interviewer?', ['"What does success look like in this role after six months?"', '"What does your company do?"', '"How soon can I take leave?"', '"No questions."'], 'It shows interest and helps you judge the job.'),
+      mc('You need a moment to think. What do you say?', ['"Let me think about that for a moment."', 'Nothing, for a full minute', '"Um, um, um…"', '"Next question."'], 'A calm pause reads as confidence.'),
+      order('Order a remote-work answer', ['A positive reason for working remotely', 'Your communication habits: written updates, overlap hours', 'How you plan and make progress visible', 'Evidence from past remote or distributed work'], 'Reason, habits, proof.'),
+      tf('Practising answers out loud improves delivery more than reading them silently.', true, 'Use the voice mock interview.'))
+  ],
+
+  'egypt-remote': [
+    L('Two job markets',
+      info('Local and remote', 'From Egypt you can target two markets:\n\n1. **Employers in Egypt:** automotive and embedded software houses, multinational R&D centres, start-ups, telecoms, banks, consulting firms.\n2. **Employers abroad who hire remotely.** You work from Egypt.\n\nNeither requires a visa.'),
+      mc('Which statement is true?', ['Many foreign companies can hire you from Egypt without relocation', 'Remote work always needs a visa', 'Only local companies can hire you', 'Remote jobs are illegal'], 'Through contractor agreements or employers of record.'),
+      match('Match the employer type to its typical AI work', [['Automotive software house', 'Perception, driver assistance, tooling'], ['Fintech start-up', 'Fraud, credit scoring, personalisation'], ['Telecom operator', 'Customer analytics, network data'], ['Consulting or outsourcing firm', 'Projects for international clients']]),
+      mc('What is the most effective route to a local interview?', ['A referral from someone inside', 'Mass-applying with one generic CV', 'Waiting to be found', 'A paper letter'], 'Tell people you are looking.'),
+      mc('Egypt’s time zone overlaps fully with the working day of…', ['Europe', 'The US west coast', 'Japan', 'Australia'], 'A real advantage: say it in your cover note.'),
+      tf('You should tailor your CV and note to each role you apply for.', true, 'A few well-matched applications beat a hundred generic ones.'),
+      mc('Where do most remote roles get advertised?', ['LinkedIn, remote job boards and company career pages', 'Only in newspapers', 'Nowhere public', 'Only on TV'], 'Use the "Remote" filter with a region such as EMEA or Worldwide.'),
+      mc('"Remote (US only)" on a job post usually means…', ['Only people resident and authorised to work there', 'Anyone worldwide', 'Egypt is included', 'A typing mistake'], 'Look for "Worldwide", "EMEA", "Anywhere" or a time-zone range.')),
+
+    L('How remote hiring works',
+      info('Four arrangements', '**Contractor:** you invoice the client. Flexible; you handle your own taxes and insurance.\n\n**Employer of record (EOR):** a third party employs you locally on the client’s behalf.\n\n**Local entity:** the company has an Egyptian office.\n\n**Talent platform:** you pass vetting and are matched to clients.'),
+      match('Match the arrangement', [['Independent contractor', 'You invoice the client directly'], ['Employer of record', 'A third party employs you locally for the client'], ['Local entity', 'The company has its own office in Egypt'], ['Talent platform', 'You are vetted, then matched to clients']]),
+      mc('As an independent contractor, who normally handles your taxes and social insurance?', ['You do', 'The client', 'Nobody', 'The job board'], 'Get advice from an accountant.'),
+      mc('Which arrangement usually gives an employment contract and local benefits?', ['Employer of record', 'Independent contractor', 'One-off freelance gig', 'None'], 'The EOR is your legal employer.'),
+      mc('Before signing a contractor agreement, which must be clear in writing?', ['Rate and currency, payment date and method, notice period, who owns the work', 'Your favourite editor', 'The office colour', 'Nothing'], 'Also who pays transfer fees.'),
+      mc('An offer says "3,000 per month". What must you ask?', ['Which currency, gross or net, and what type of contract', 'Nothing', 'The CEO’s age', 'The office address only'], 'These change what you take home.'),
+      tf('You should check which payment methods currently work for receiving foreign currency before you sign.', true, 'Availability and fees change.'),
+      mc('A client insists on paying only after six months, with no written contract. Best response?', ['Decline or insist on a written contract with regular payment', 'Accept at once', 'Work for free first', 'Send your passwords'], 'Protect yourself.')),
+
+    L('Being credible from a distance',
+      info('They cannot verify your employer', 'A hiring manager abroad may not know your university or company. What they **can** verify:\n\n- your **code** (a clean GitHub)\n- a **live demo**\n- your **writing**\n- a **CV** with measurable results'),
+      mc('Which is the strongest proof of skill for a remote employer?', ['A working project they can try and read', 'A long list of courses', 'A formal photo', 'A list of adjectives'], 'Evidence they can check themselves.'),
+      mc('A good GitHub project has…', ['A clear README, working code and a way to run it', 'Fifty unfinished repositories', 'No description', 'Only screenshots'], 'Two or three polished projects beat many abandoned ones.'),
+      mc('Which CV line is strongest?', ['"Cut inference latency from 60 ms to 24 ms by quantising and optimising preprocessing"', '"Responsible for model optimisation"', '"Hard-working team player"', '"Worked on AI"'], 'Action, method and measured result.'),
+      mc('Ideal CV length for most applications?', ['One or two pages', 'Six pages', 'Half a page', 'A video only'], 'Recruiters skim.'),
+      mc('Why does written English matter so much for remote roles?', ['Most communication is written and asynchronous', 'It does not', 'Only speaking matters', 'Interviews are silent'], 'Your messages are your presence.'),
+      match('Match the profile element to its purpose', [['LinkedIn headline', 'Says your speciality at a glance'], ['GitHub README', 'Explains what a project does and how to run it'], ['Live demo', 'Lets them try your work'], ['Cover note', 'Links your experience to this role']]),
+      tf('A short, specific cover note tailored to the role is worth writing.', true, 'Two or three sentences on why you fit.')),
+
+    L('Salary and negotiation',
+      info('Prepare before the call', '1. **Research** what the role pays in the employer’s market.\n2. Decide your **target** and your **minimum**.\n3. Give a **range**, in the contract currency.\n4. Consider the **whole package**: leave, equipment, learning budget, contract length.'),
+      order('Order your preparation for the salary question', ['Research the market rate for the role and region', 'Decide your target and your minimum', 'Prepare a range in the contract currency', 'Clarify gross or net and the contract type', 'Weigh the whole package'], 'Know your numbers first.'),
+      mc('A foreign employer asks for your expectation. What should you anchor on?', ['The market value of the role', 'Your current salary in EGP', 'The lowest number you can live on', 'A random number'], 'Price the role, not your past.'),
+      mc('Why give a range instead of one number?', ['It leaves room to negotiate while signalling your level', 'To confuse them', 'Ranges are required by law', 'It is never a good idea'], 'Put your target near the bottom of the range.'),
+      mc('They ask "What is your current salary?" A reasonable reply?', ['"I would prefer to focus on the value of this role; my expectation is X to Y."', 'Tell them a false number', 'Refuse rudely', 'Hang up'], 'Redirect politely to your expectation.'),
+      mc('The offer is below your minimum. Best move?', ['Explain your range and reasons, and ask whether there is flexibility', 'Accept immediately', 'Insult them', 'Disappear'], 'Stay professional; they may adjust salary or other terms.'),
+      mc('Besides salary, which matters in a remote contract?', ['Paid leave, notice period, equipment, contract length', 'The company logo', 'The font of the offer', 'Nothing else'], 'A higher rate with no leave or security may be worth less.'),
+      mc('Interview: "Why should we hire you?" Strongest structure?', ['Their needs, your matching evidence, what is distinctive about you', 'A list of adjectives', 'Your salary needs', 'A long biography'], 'Match, prove, differentiate.'),
+      tf('A steady weekly routine of tailored applications, referrals, public work and mock interviews beats occasional bursts.', true, 'Consistency compounds.'))
+  ]
+};
