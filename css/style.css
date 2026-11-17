@@ -178,3 +178,5 @@ label{flex-wrap:wrap;min-width:0}
 button.back{padding:0;font-size:.9rem;color:var(--accent)}
 .lesson .tests label{align-items:flex-start;flex-wrap:nowrap}
 .lesson .tests input{margin-top:6px}
+.lvl{margin:10px 0 -2px}
+.lvl .badge{font-weight:600;letter-spacing:.02em}

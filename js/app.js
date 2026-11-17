@@ -1,7 +1,8 @@
 import { store } from './store.js';
 import { md, esc } from './md.js';
-import { MODULES, TOPICS, ROLES, PROJECTS, topicById, projectById, roleById, roleTopics, loadLesson, levelOf, stepById } from './content.js';
+import { MODULES, TOPICS, ROLES, PROJECTS, topicById, projectById, roleById, roleTopics, loadLesson, stepById } from './content.js';
 import { playLesson, stopPlayer } from './learn.js';
+import { practiceSet, hasPractice } from './practice.js';
 import { parseJson } from './llm.js';
 import { runPython, runSql, gradeSql } from './runner.js';
 import { createEditor } from './editor.js';
@@ -157,10 +158,12 @@ async function topicView(id, tab, q) {
   const t = topicById(id);
   if (!t) { app.innerHTML = '<h1>Topic not found</h1><p><a href="#/">Back to topics</a></p>'; return; }
   const tabs = [t.path.length && ['learn', 'Learn'], ['lesson', 'Summary'], t.tasks.length && ['practice', `Code (${t.tasks.length})`],
-    t.quiz.length && ['quiz', 'Quiz'], t.interview.length && ['interview', 'Interview questions']].filter(Boolean);
+    (t.quiz.length || t.path.length) && ['quiz', 'Quizzes'], t.interview.length && ['interview', 'Interview questions']].filter(Boolean);
+  if (tab === 'drill') return drillView(t, +q.get('level'));
   if (!tabs.some(x => x[0] === tab)) tab = tabs[0][0];
   const nextTab = tabs[tabs.findIndex(x => x[0] === tab) + 1];
   if (tab === 'learn' && q.has('l') && t.path[+q.get('l')]) return lessonView(t, +q.get('l'));
+  if (tab === 'quiz' && q.has('level')) return quizRun(t, q.get('level'));
   app.innerHTML = `<a class="back" href="#/">← All topics</a><h1>${esc(t.title)}</h1>
     <nav class="tabs">${tabs.map(([k, label]) => `<a class="${k === tab ? 'on' : ''}" href="#/topic/${t.id}/${k}">${label}</a>`).join('')}</nav><div id="pane"></div>`;
   const pane = app.querySelector('#pane');
@@ -183,21 +186,45 @@ async function topicView(id, tab, q) {
 }
 
 /* ---------- Learning path ---------- */
+const LEVEL_NAMES = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
+const QUIZ_LEVELS = [
+  ['easy', 'Easy', 'Definitions and basics'],
+  ['medium', 'Medium', 'Apply the ideas to short scenarios'],
+  ['hard', 'Hard', 'Reasoning, trade-offs, debugging and calculations'],
+  ['mixed', 'Mixed', 'Everything, easy to hard: the final check']
+];
+const quizBest = (t, lv) => store.state.quizLv?.[t.id]?.[lv];
+const shuffled = a => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(p => p[1]);
+const drillCard = t => hasPractice(t.id) ? `<div class="card"><b>Endless practice</b> <span class="muted">Fresh questions with new numbers every round.</span>
+    <div class="row">${['Easy', 'Medium', 'Hard'].map((n, i) => `<a class="btn" href="#/topic/${t.id}/drill?level=${i + 1}">${n}</a>`).join('')}</div></div>` : '';
+
 function pathView(pane, t) {
   const n = t.path.length;
   const cur = t.path.findIndex((l, i) => !store.lessonDone(`${t.id}:${i}`));
-  const node = (href, dot, title, sub, cls = '', i = 0) => `<a class="node ${cls}" style="--o:${[0, 1, 2, 1][i % 4]}" href="${href}"><span class="dot">${dot}</span><span><b>${esc(title)}</b><small>${sub}</small></span></a>`;
+  let k = 0;
+  const node = (href, dot, title, sub, cls = '') => `<a class="node ${cls}" style="--o:${[0, 1, 2, 1][k++ % 4]}" href="${href}"><span class="dot">${dot}</span><span><b>${esc(title)}</b><small>${sub}</small></span></a>`;
   const allDone = cur < 0;
   const projs = PROJECTS.filter(p => p.topics.includes(t.id));
   const real = t.uses.length || projs.length ? `<div class="card"><b>Where this is used</b>
     ${t.uses.length ? `<ul>${t.uses.map(u => `<li>${esc(u)}</li>`).join('')}</ul>` : ''}
     ${projs.length ? `<p class="small">Prove it with a project: ${projs.map(p => `<a href="#/project/${p.id}">${esc(p.title)}</a>`).join(' · ')}</p>` : ''}</div>` : '';
-  pane.innerHTML = `${real}<p class="muted">Work down the path. Each lesson takes about five minutes.</p><div class="path">
-    ${t.path.map((l, i) => { const done = store.lessonDone(`${t.id}:${i}`); return node(`#/topic/${t.id}/learn?l=${i}`, done ? '✓' : i + 1, l.title, `${levelOf(i, n)} · ${l.steps.length} steps${i === cur ? ' · <b>start here</b>' : ''}`, (done ? 'done ' : '') + (i === cur ? 'cur' : ''), i); }).join('')}
-    ${t.tasks.length ? node(`#/topic/${t.id}/practice`, '⌨', 'Write real code', `${t.tasks.filter(k => store.task(k.id).best === 1).length} of ${t.tasks.length} tasks solved`, t.tasks.every(k => store.task(k.id).best === 1) ? 'done' : allDone ? 'cur' : '', n) : ''}
-    ${t.quiz.length ? node(`#/topic/${t.id}/quiz`, '?', 'Checkpoint quiz', store.state.quiz[t.id] ? `Best ${Math.round(store.state.quiz[t.id].best * 100)}%` : 'Test yourself', store.state.quiz[t.id]?.best >= 0.8 ? 'done' : '', n + 1) : ''}
-    ${t.interview.length ? node(`#/interview?topic=${t.id}`, '🎙', 'Say it out loud', 'Voice mock interview on this topic', '', n + 2) : ''}
+  // Lessons in four levels, each closed by a checkpoint quiz at the matching difficulty.
+  const groups = [[], [], [], []];
+  t.path.forEach((l, i) => groups[Math.min(3, Math.floor(i * 4 / Math.max(n, 1)))].push(i));
+  const body = groups.map((g, gi) => {
+    if (!g.length) return '';
+    const [lv, lvName] = QUIZ_LEVELS[gi], best = quizBest(t, lv);
+    return `<div class="lvl"><span class="badge">${LEVEL_NAMES[gi]}</span></div>` +
+      g.map(i => { const done = store.lessonDone(`${t.id}:${i}`); return node(`#/topic/${t.id}/learn?l=${i}`, done ? '✓' : i + 1, t.path[i].title, `${t.path[i].steps.length} steps${i === cur ? ' · <b>start here</b>' : ''}`, (done ? 'done ' : '') + (i === cur ? 'cur' : '')); }).join('') +
+      node(`#/topic/${t.id}/quiz?level=${lv}`, '★', `Checkpoint: ${lvName} quiz`, best != null ? `Best ${Math.round(best * 100)}%` : '10 questions · pass with 80%', best >= 0.8 ? 'done' : '');
+  }).join('');
+  pane.innerHTML = `${real}<p class="muted">Work down the path from Beginner to Expert. Each lesson takes about five minutes; each level ends with a checkpoint quiz.</p><div class="path">
+    ${body}
+    <div class="lvl"><span class="badge">Prove it</span></div>
+    ${t.tasks.length ? node(`#/topic/${t.id}/practice`, '⌨', 'Write real code', `${t.tasks.filter(x => store.task(x.id).best === 1).length} of ${t.tasks.length} tasks solved`, t.tasks.every(x => store.task(x.id).best === 1) ? 'done' : allDone ? 'cur' : '') : ''}
+    ${t.interview.length ? node(`#/interview?topic=${t.id}`, '🎙', 'Say it out loud', 'Voice mock interview on this topic') : ''}
   </div>
+  ${drillCard(t)}
   <div class="card"><b>Want more?</b> <span class="muted">Generate fresh exercises on this topic with your AI provider.</span>
     <div class="row"><select id="ai-level"><option>Beginner</option><option selected>Intermediate</option><option>Advanced</option><option>Interview level</option></select>
     <button id="ai-more">Generate extra practice</button><span id="ai-status" class="small muted"></span></div></div>`;
@@ -326,28 +353,56 @@ function practice(pane, t, idx) {
   };
 }
 
+/** 10 questions for a quiz level: the question bank first, then generated exercises, then lesson steps of that level. */
+function quizSteps(t, level, n = 10) {
+  const L = { easy: 1, medium: 2, hard: 3 };
+  const toMc = x => ({ t: 'mc', q: x.q, o: [x.options[x.answer], ...x.options.filter((_, j) => j !== x.answer)], w: x.why, nr: true, lv: x.level || 'medium' });
+  const bank = t.quiz.filter(x => level === 'mixed' || (x.level || 'medium') === level).map(toMc);
+  const N = t.path.length, band = i => (i / Math.max(N, 1) < 1 / 3 ? 'easy' : i / Math.max(N, 1) < 2 / 3 ? 'medium' : 'hard');
+  const fromPath = t.path.flatMap((l, li) => (level === 'mixed' || band(li) === level)
+    ? l.steps.map((s, si) => ({ ...s, _id: `${t.id}:${li}:${si}`, lv: band(li) })).filter(s => s.t !== 'info') : []);
+  const gen = !hasPractice(t.id) ? [] : level === 'mixed'
+    ? [1, 2, 3].flatMap(v => practiceSet(t.id, v, 1).map(s => ({ ...s, lv: ['easy', 'medium', 'hard'][v - 1] })))
+    : practiceSet(t.id, L[level], 3).map(s => ({ ...s, lv: level }));
+  const out = [...shuffled(bank).slice(0, level === 'mixed' ? 5 : 4), ...gen];
+  out.push(...shuffled(fromPath).slice(0, Math.max(0, n - out.length)));
+  const rank = { easy: 0, medium: 1, hard: 2 };
+  // Mixed runs from easy to hard; a single level is shuffled.
+  return level === 'mixed' ? shuffled(out.slice(0, n)).sort((a, b) => rank[a.lv] - rank[b.lv]) : shuffled(out).slice(0, n);
+}
+
 function quiz(pane, t) {
-  const best = store.state.quiz[t.id]?.best;
-  pane.innerHTML = `${best !== undefined ? `<p class="muted">Best score so far: ${Math.round(best * 100)}%</p>` : ''}
-  <form id="quiz">${t.quiz.map((x, i) => `<fieldset class="q"><legend>${i + 1}. ${esc(x.q)}</legend>
-    ${x.options.map((o, j) => `<label><input type="radio" name="q${i}" value="${j}"> <span>${esc(o)}</span></label>`).join('')}<div class="why"></div></fieldset>`).join('')}
-  <div class="row"><button class="primary">Check answers</button><span id="qres" class="score" aria-live="polite"></span></div></form>
+  pane.innerHTML = `<p class="muted">Each quiz has 10 questions drawn from the question bank, the lessons${hasPractice(t.id) ? ' and freshly generated exercises' : ''}. Score 80% to pass a level, then move up.</p>
+  <div class="grid">${QUIZ_LEVELS.map(([lv, name, desc]) => {
+    const best = quizBest(t, lv);
+    return `<a class="topic" href="#/topic/${t.id}/quiz?level=${lv}"><b>${name}</b><span class="muted small">${desc}</span>
+      ${bar(Math.round((best || 0) * 100))}<span class="small ${best != null ? (best >= 0.8 ? 'ok' : '') : 'muted'}">${best != null ? `Best ${Math.round(best * 100)}%${best >= 0.8 ? ' · passed' : ''}` : 'Not taken'}</span></a>`;
+  }).join('')}</div>
+  ${drillCard(t)}
   <p><a class="btn" href="#/interview?topic=${t.id}">Next: practise interview questions out loud</a></p>`;
-  const form = pane.querySelector('#quiz');
-  form.onsubmit = e => {
-    e.preventDefault();
-    let right = 0;
-    t.quiz.forEach((x, i) => {
-      const fs = form.querySelectorAll('fieldset')[i];
-      const chosen = form.querySelector(`[name=q${i}]:checked`);
-      const ok = chosen && +chosen.value === x.answer;
-      if (ok) right++;
-      fs.querySelectorAll('label').forEach((l, j) => l.className = j === x.answer ? 'right' : (chosen && +chosen.value === j ? 'wrong' : ''));
-      fs.querySelector('.why').innerHTML = `<span class="${ok ? 'ok' : 'err'}">${ok ? 'Correct.' : chosen ? 'Not quite.' : 'Not answered.'}</span> ${esc(x.why)}`;
-    });
-    store.setQuiz(t.id, right / t.quiz.length);
-    pane.querySelector('#qres').textContent = `${right} of ${t.quiz.length} correct · ${Math.round(100 * right / t.quiz.length)}%`;
-  };
+}
+
+function quizRun(t, level) {
+  const i = QUIZ_LEVELS.findIndex(x => x[0] === level);
+  const [lv, name] = QUIZ_LEVELS[i < 0 ? 3 : i], next = QUIZ_LEVELS[(i < 0 ? 3 : i) + 1];
+  playLesson(app, {
+    title: `${t.title} · ${name} quiz`, steps: quizSteps(t, lv), lessonId: `quiz:${t.id}:${lv}`,
+    backHref: `#/topic/${t.id}/quiz`, backLabel: 'All quiz levels',
+    nextHref: next ? `#/topic/${t.id}/quiz?level=${next[0]}` : `#/topic/${t.id}/learn`, nextLabel: next ? `Try the ${next[1]} quiz` : 'Back to the path',
+    onDone: acc => store.setQuizLevel(t.id, lv, acc),
+    doneTitle: acc => acc >= 0.8 ? `${name} quiz passed` : `${name} quiz: keep practising`
+  });
+}
+
+function drillView(t, level) {
+  const lv = Math.min(3, Math.max(1, level || 1)), name = ['Easy', 'Medium', 'Hard'][lv - 1];
+  const steps = practiceSet(t.id, lv, 10);
+  if (!steps.length) { location.hash = `#/topic/${t.id}/learn`; return; }
+  playLesson(app, {
+    title: `${t.title} · ${name} practice`, steps, lessonId: `drill:${t.id}:${lv}`, noReview: true,
+    backHref: `#/topic/${t.id}/learn`, nextHref: `#/topic/${t.id}/drill?level=${lv}&r=${Date.now()}`, nextLabel: 'Another round',
+    doneTitle: acc => acc === 1 ? 'Flawless round' : 'Round complete'
+  });
 }
 
 /* ---------- Playground ---------- */

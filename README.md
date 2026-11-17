@@ -6,14 +6,16 @@ Each topic has a short lesson, coding tasks with automatic tests, a quiz and int
 
 ## What is inside
 
-- **38 topics** in 11 modules: foundations, core ML, deep learning, time series and sequence models, GenAI and LLMs, AI agents, MLOps and system design, deployment (C++, GPU, ECU, cloud), computer vision and NLP, sensor fusion and perception, and interview skills.
-- **A learning path for every topic**, from zero to interview level: more than 1,200 bite-size steps with instant feedback. Exercise types include multiple choice, true or false, fill the blank, type the answer, put code lines in order and match pairs. Steps you miss come back, and are collected in a review pile.
-- **XP, levels, a daily goal and streaks** to keep a daily habit.
-- **78 coding tasks** in Python and SQL that run in the browser, with visible and hidden tests.
-- **Interactive demos** inside summaries: gradient descent, decision thresholds, graph search, convolution filters, box overlap, token sampling, a sensor coverage scene and a radar-camera Kalman filter.
-- **Voice mock interview**: questions are read aloud, you answer by speaking, and you get a score, the key points you covered, pace and filler-word counts, and a model answer.
-- **Role tracks**: ML Engineer, Data Scientist, GenAI / LLM Engineer, MLOps, NLP, Computer Vision, Automotive / Perception, Data Analyst.
-- **Optional AI provider** for unlimited extra exercises, an interviewer with follow-up questions, and code hints. Use your own key for Groq, Google Gemini or OpenRouter, a local Ollama model, or any OpenAI-compatible endpoint.
+- **Pick a target job** (nine AI roles, from Data Analyst to Perception / ADAS Engineer) and get a staged roadmap of every topic it needs.
+- **48 topics**, each taught from zero to interview level in **8 bite-size lessons** grouped Beginner, Intermediate, Advanced and Expert: more than 3,300 interactive steps with instant feedback (multiple choice, true or false, fill the blank, type the answer, order code lines, match pairs).
+- **Levelled quizzes**: Easy, Medium, Hard and Mixed for every topic, drawn from a bank of 12 questions per topic, the lessons and generated exercises. Pass a level with 80%.
+- **Endless practice**: generated exercises with fresh numbers every round, at three difficulties, for 46 topics. Answers are computed, so they always match the question.
+- **24 portfolio projects** built on use cases that companies run in production, each with a public dataset, milestones, what to publish and how to discuss it in an interview.
+- **98 coding tasks** in Python and SQL that run in the browser, with visible and hidden tests.
+- **XP, levels, a daily goal, streaks** and a review pile of the steps you missed.
+- **Interactive demos** in the summaries: gradient descent, decision thresholds, graph search, convolution filters, box overlap, token sampling, sensor coverage and a radar-camera Kalman filter.
+- **Voice mock interviews**: questions read aloud, spoken answers scored on key points, pace and filler words.
+- **Optional AI provider** (your own key for Groq, Google Gemini or OpenRouter, a local Ollama model, or any OpenAI-compatible endpoint) for extra generated exercises, an interviewer with follow-up questions, and code hints.
 
 ## Privacy
 
@@ -38,7 +40,9 @@ Everything works in current Chrome, Edge, Firefox and Safari. Answering by voice
 1. Add a topic object to the matching file in `content/` (for example `content/ml.js`): `id`, `title`, `tracks`, and any of `tasks`, `quiz`, `interview`.
 2. Add a `=== your-topic-id ===` section with the summary in Markdown to the `.md` file with the same name.
 3. Add a learning path under the same topic id in `content/paths/`, built with the helpers in `content/_h.js` (`L`, `info`, `mc`, `tf`, `fill`, `fillc`, `type`, `order`, `match`). For `mc` and `fill` the first option is the correct one; options are shuffled when shown.
-4. Open `selftest.html` in the browser. It runs every reference solution against its tests and reports problems.
+4. Check the content: `node tools/check.mjs --lessons 8 content/paths/*.js`, `node tools/check.mjs --quiz 12 content/<module>.js` and `node tools/check.mjs --practice`. Then open `selftest.html` in the browser: it runs every reference solution against its tests.
+
+Quiz questions take a `level` of `easy`, `medium` or `hard`. To add endless practice for a topic, add a generator to `js/practice.js`.
 
 A Python task has `prompt`, `starter`, `solution` and `tests` (each test is Python code using `assert`; a helper `close(a, b, tol)` compares numbers, lists and arrays). An SQL task has `lang: 'sql'`, `setup`, optional `hiddenSetup`, `starter` and `solution`.
 

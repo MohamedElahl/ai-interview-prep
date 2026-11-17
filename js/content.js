@@ -12,6 +12,7 @@ import deploy from '../content/deploy.js';
 import special from '../content/special.js';
 import fusion from '../content/fusion.js';
 import career from '../content/career.js';
+import extra from '../content/extra.js';
 
 import pFoundations from '../content/paths/foundations.js';
 import pMl from '../content/paths/ml.js';
@@ -24,9 +25,11 @@ import pDeploy from '../content/paths/deploy.js';
 import pSpecial from '../content/paths/special.js';
 import pFusion from '../content/paths/fusion.js';
 import pCareer from '../content/paths/career.js';
+import pExtra1 from '../content/paths/extra1.js';
+import pExtra2 from '../content/paths/extra2.js';
 import { ROLES, USES } from '../content/roles.js';
 
-const PATHS = { ...pFoundations, ...pMl, ...pDl, ...pSequence, ...pGenai, ...pAgents, ...pProduction, ...pDeploy, ...pSpecial, ...pFusion, ...pCareer };
+const PATHS = { ...pFoundations, ...pMl, ...pDl, ...pSequence, ...pGenai, ...pAgents, ...pProduction, ...pDeploy, ...pSpecial, ...pFusion, ...pCareer, ...pExtra1, ...pExtra2 };
 
 export const MODULES = [
   { id: 'foundations', title: 'Foundations', topics: foundations },
@@ -39,7 +42,9 @@ export const MODULES = [
   { id: 'deploy', title: 'Deployment: C++, GPU, ECU and cloud', topics: deploy },
   { id: 'special', title: 'Computer vision and NLP', topics: special },
   { id: 'fusion', title: 'Sensor fusion and perception', topics: fusion },
-  { id: 'career', title: 'Interview skills and job search', topics: career }
+  { id: 'career', title: 'Interview skills and job search', topics: career },
+  // Topics added from course curricula; each sets `group` to appear in the module it belongs to.
+  { id: 'extra', title: 'More topics', topics: extra }
 ];
 
 export { ROLES, PROJECTS, projectById, roleById, roleTopics } from '../content/roles.js';
@@ -53,7 +58,7 @@ export const TOPICS = MODULES.flatMap(m => m.topics.map(t => ({
   path: PATHS[t.id] || [], uses: t.uses || USES[t.id] || []
 })));
 
-export const LEVELS = ['Zero', 'Core', 'Advanced', 'Hero'];
+export const LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'Expert'];
 export const levelOf = (i, n) => LEVELS[Math.min(3, Math.floor(i * 4 / Math.max(n, 1)))];
 
 export const topicById = id => TOPICS.find(t => t.id === id);

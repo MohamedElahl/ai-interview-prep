@@ -42,6 +42,13 @@ export const store = {
   addReview(id) { s.review[id] = 1; this.save(); },
   clearReview(id) { delete s.review[id]; this.save(); },
 
+  // Levelled quizzes: best score per level. The topic’s quiz score weights harder levels more.
+  setQuizLevel(id, level, acc) {
+    const q = (s.quizLv ||= {})[id] ||= {};
+    q[level] = Math.max(q[level] || 0, acc);
+    this.setQuiz(id, acc * ({ easy: 0.6, medium: 0.8 }[level] || 1));
+  },
+
   // Project milestones: ticking one earns XP the first time only.
   milestone(pid, i) { return !!s.projects[pid]?.[i]; },
   projectDone(pid, n) { let c = 0; for (let i = 0; i < n; i++) if (s.projects[pid]?.[i]) c++; return c; },

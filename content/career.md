@@ -54,56 +54,60 @@ Use the mock interview on this topic and listen to your pace and filler-word cou
 === egypt-remote ===
 # Two markets
 
-You can target employers in Egypt and employers abroad who hire remotely. Neither needs a visa.
+Wherever you live, you can usually target two markets: employers in your own country, and employers abroad who hire remotely. Neither requires you to relocate.
 
-# Employers in Egypt
+# Employers in your local market
 
-Kinds of company that hire AI engineers locally:
+Kinds of organisation that hire AI engineers in most countries:
 
-- **Automotive and embedded software houses.** Egypt has a large automotive software sector serving European suppliers, with work in driver assistance, perception and tooling.
-- **Multinational R&D and service centres** in Cairo and Giza, in telecoms, software and consulting.
-- **Fintech, e-commerce, health and logistics start-ups**, mostly in Cairo.
-- **Outsourcing and consulting firms** that place engineers on international projects.
-- **Telecom operators and banks**, for data science and analytics.
+- **Product companies and software houses**, including those that build software for other industries such as manufacturing, vehicles, health or retail.
+- **Multinational R&D and service centres.**
+- **Start-ups** in fintech, e-commerce, health and logistics.
+- **Outsourcing and consulting firms** that place engineers on client projects.
+- **Telecom operators, banks and insurers**, for data science and analytics.
+- **Universities, research institutes and the public sector.**
 
-Where to look: LinkedIn, Wuzzuf, company career pages, university and alumni networks, and local AI meet-ups and communities. Referrals are the most effective route, so tell people you are looking.
+Where to look: LinkedIn, the job boards that are popular in your country, company career pages, university and alumni networks, and local AI meet-ups and communities. Referrals are the most effective route, so tell people you are looking.
 
-# Remote roles from Egypt
+# Remote roles with employers abroad
 
-How companies abroad can hire you:
+How a company in another country can hire you:
 
 | Arrangement | How it works | Notes |
 | --- | --- | --- |
 | Independent contractor | You invoice the client | Flexible. You handle your own taxes and insurance |
 | Employer of record | A third party employs you locally for the client | Employment contract and local benefits |
-| Local entity | The company has an Egyptian office | Standard local employment |
+| Local entity | The company has a registered office in your country | Standard local employment |
 | Talent platforms | You pass their vetting and are matched to clients | Competitive entry, steady work afterwards |
 
-Where to look: LinkedIn with the "Remote" filter and a region such as EMEA or Worldwide, remote job boards, start-up job boards, vetted freelance platforms, and company career pages that say "remote, anywhere".
+Not every arrangement is available everywhere. Ask the employer which ones they offer for your country, and check how each is treated where you live.
+
+Where to look: LinkedIn with the "Remote" filter and your region or "Worldwide", remote job boards, start-up job boards, vetted freelance platforms, and company career pages that say "remote, anywhere".
 
 # Read the posting carefully
 
-- "Remote (US)" or "Remote (UK)" normally means residents only.
-- Look for "Worldwide", "EMEA", "Anywhere" or a time-zone range that includes UTC+2 / UTC+3.
-- Egypt overlaps the full European working day. Say so.
+- "Remote" followed by one country normally means residents of that country only.
+- Look for "Worldwide", "Anywhere", your region or a time-zone range that includes yours.
+- Work out how many hours of your working day overlap with the team's, and say so in your application.
 
 # Make your profile credible abroad
 
-- A one-page CV in English with measurable results.
+- A one- or two-page CV with measurable results, in the language the team works in.
 - A GitHub with two or three clean, documented projects, and at least one live demo.
 - A LinkedIn headline that names your speciality, for example "AI Engineer: computer vision and LLM systems".
-- Strong written English. Remote teams judge you by your writing.
+- Clear writing. Remote teams judge you by your messages.
 
 # Money and paperwork
 
 - Agree the currency, gross or net, payment date and method in writing.
 - Ask who pays transfer fees.
-- Contractors are normally responsible for their own taxes and social insurance. Rules change, so confirm your situation with an accountant.
-- Check which payment services currently work for receiving foreign currency in Egypt before you sign.
+- Contractors are normally responsible for their own taxes and insurance. Rules differ by country and change over time, so confirm your situation with a local accountant or your tax authority.
+- Before you sign, check which payment methods work in your country for receiving money from abroad, and what they cost.
+- Verify an unfamiliar employer: company registration, website, staff profiles and a video call with a real person. A real employer never asks you to pay to be hired.
 
 # Negotiation
 
-- Research the rate for the role in the employer's market, not only in Egypt.
+- Research the rate for the role in the employer's market, not only in your local market.
 - Give a range in the contract currency and anchor on the value of the role.
 - Consider the whole package: paid leave, equipment, learning budget, contract length and notice period.
 

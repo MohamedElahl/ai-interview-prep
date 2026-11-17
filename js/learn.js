@@ -4,6 +4,14 @@ import { md, inline, esc } from './md.js';
 
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const norm = s => String(s).toLowerCase().replace(/\s+/g, ' ').replace(/[.;]+$/, '').trim();
+/** Read a typed number: accepts 1,000 / 0,5 / 12% / 1/8 / 3.5 ms. */
+export function parseNum(raw) {
+  let s = String(raw).trim().toLowerCase().replace(/\s+/g, '').replace(/[a-zµ°$€£]+$/, '').replace(/%$/, '');
+  s = /^-?\d+,\d{1,2}$/.test(s) ? s.replace(',', '.') : s.replace(/,/g, '');
+  const f = s.match(/^(-?\d*\.?\d+)\/(-?\d*\.?\d+)$/);
+  if (f) return +f[1] / +f[2];
+  return s === '' ? NaN : Number(s);
+}
 let keyHandler = null;
 
 export function stopPlayer() {
@@ -12,7 +20,7 @@ export function stopPlayer() {
 }
 
 /** steps: [{t:'info'|'mc'|'tf'|'fill'|'type'|'order'|'match', ...}] */
-export function playLesson(root, { title, steps, lessonId, backHref, nextHref, nextLabel, review, noReview }) {
+export function playLesson(root, { title, steps, lessonId, backHref, nextHref, nextLabel, review, noReview, onDone, doneTitle, backLabel }) {
   stopPlayer();
   const queue = steps.map((s, i) => ({ ...s, _id: s._id || `${lessonId}:${i}` }));
   const total = queue.length, exercises = queue.filter(s => s.t !== 'info').length;
@@ -44,7 +52,7 @@ export function playLesson(root, { title, steps, lessonId, backHref, nextHref, n
     stepEl.querySelectorAll('button,input').forEach(b => b.disabled = true);
     if (ok) { done++; if (review) store.clearReview(s._id); }
     else {
-      if (!noReview) store.addReview(s._id);
+      if (!noReview && !s.nr) store.addReview(s._id);
       if (wrong.has(s._id)) done++; else { wrong.add(s._id); queue.push(s); }
     }
     bar.style.width = (100 * done / total) + '%';
@@ -88,9 +96,11 @@ export function playLesson(root, { title, steps, lessonId, backHref, nextHref, n
       const enable = checkBtn(s, () => ({ ok: pick === s.o[0], answer: `<code>${esc(s.o[0])}</code>` }));
       stepEl.querySelectorAll('.chip').forEach(c => c.onclick = () => { pick = c.textContent; stepEl.querySelector('.slot').textContent = pick; stepEl.querySelectorAll('.chip').forEach(x => x.classList.toggle('sel', x === c)); enable(true); });
     } else if (s.t === 'type') {
-      stepEl.innerHTML = `<p class="muted small">Type the answer</p>${q}${code}<input class="typed" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer">`;
+      const isNum = Number.isFinite(s.num);
+      stepEl.innerHTML = `<p class="muted small">Type the answer</p>${q}${code}<input class="typed" autocomplete="off" autocapitalize="off" spellcheck="false" ${isNum ? 'inputmode="decimal"' : ''} aria-label="Your answer">`;
       const inp = stepEl.querySelector('input');
-      const enable = checkBtn(s, () => ({ ok: s.a.some(x => norm(x) === norm(inp.value)), answer: `<code>${esc(s.a[0])}</code>` }));
+      const right = () => isNum ? Math.abs(parseNum(inp.value) - s.num) <= (s.tol ?? 1e-9) + 1e-12 : s.a.some(x => norm(x) === norm(inp.value));
+      const enable = checkBtn(s, () => ({ ok: right(), answer: `<code>${esc(s.a[0])}</code>` }));
       inp.oninput = () => enable(inp.value.trim() !== '');
       inp.focus();
     } else if (s.t === 'order') {
@@ -129,14 +139,15 @@ export function playLesson(root, { title, steps, lessonId, backHref, nextHref, n
     const acc = exercises ? (exercises - wrong.size) / exercises : 1;
     const xp = review ? 5 + exercises : 10 + (wrong.size === 0 ? 5 : 0);
     store.completeLesson(lessonId, acc, xp);
+    onDone?.(acc);
     const goal = store.state.goal || 30, today = store.todayXp();
     root.innerHTML = `<div class="player"><div class="card" style="text-align:center">
-      <h1>${wrong.size === 0 ? 'Perfect lesson' : 'Lesson complete'}</h1>
+      <h1>${doneTitle ? esc(doneTitle(acc)) : wrong.size === 0 ? 'Perfect lesson' : 'Lesson complete'}</h1>
       <div class="stats"><div class="stat"><b>+${xp} XP</b><span class="muted small">earned</span></div>
         <div class="stat"><b>${Math.round(acc * 100)}%</b><span class="muted small">first-try accuracy</span></div>
         <div class="stat"><b>🔥 ${store.streak()}</b><span class="muted small">day streak</span></div></div>
-      <p class="muted">${today >= goal ? 'Daily goal reached.' : `${goal - today} XP to today's goal.`}${wrong.size ? ' The steps you missed are saved under Review.' : ''}</p>
-      <div class="row" style="justify-content:center">${nextHref ? `<a class="btn primary" href="${nextHref}">${esc(nextLabel || 'Next lesson')}</a>` : ''}<a class="btn" href="${backHref}">Back to path</a></div>
+      <p class="muted">${today >= goal ? 'Daily goal reached.' : `${goal - today} XP to today's goal.`}${wrong.size && !noReview ? ' The steps you missed are saved under Review.' : ''}</p>
+      <div class="row" style="justify-content:center">${nextHref ? `<a class="btn primary" href="${nextHref}">${esc(nextLabel || 'Next lesson')}</a>` : ''}<a class="btn" href="${backHref}">${esc(backLabel || 'Back to path')}</a></div>
     </div></div>`;
   }
 

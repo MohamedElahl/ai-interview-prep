@@ -9,62 +9,62 @@ export const ROLES = [
     about: 'Builds, ships and maintains ML models in production. The most common AI job title: part data scientist, part software engineer.',
     rounds: ['Coding: data structures and algorithms in Python', 'ML fundamentals and metrics', 'ML system design', 'A past project in depth', 'Behavioural'],
     stages: [
-      { name: 'Programming foundations', topics: ['python', 'dsa', 'algo-advanced', 'sql', 'stats'] },
-      { name: 'Core machine learning', topics: ['ml-fundamentals', 'metrics', 'linear-models', 'trees', 'feature-eng'] },
-      { name: 'Deep learning', topics: ['nn-basics', 'training', 'transformers'] },
-      { name: 'Modern AI systems', topics: ['llm-basics', 'rag', 'timeseries'] },
-      { name: 'Production', topics: ['mlops', 'cloud-deploy', 'ml-system-design', 'quantization'] },
+      { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa', 'algo-advanced', 'sql', 'stats'] },
+      { name: 'Core machine learning', topics: ['ml-fundamentals', 'metrics', 'linear-models', 'trees', 'feature-eng', 'unsupervised'] },
+      { name: 'Deep learning', topics: ['nn-basics', 'pytorch', 'training', 'transformers'] },
+      { name: 'Modern AI systems', topics: ['llm-basics', 'rag', 'timeseries', 'ts-transformers', 'recsys', 'rl'] },
+      { name: 'Production', topics: ['data-pipelines', 'mlops', 'cloud-deploy', 'ml-system-design', 'quantization', 'responsible-ai'] },
       INTERVIEW
     ],
-    projects: ['churn-prediction', 'fraud-detection', 'model-api', 'recsys']
+    projects: ['churn-prediction', 'fraud-detection', 'model-api', 'recsys', 'fairness-audit', 'rl-agent']
   },
   {
     id: 'ds', title: 'Data Scientist',
     about: 'Turns data into decisions: analysis, experiments and predictive models, explained clearly to the business.',
     rounds: ['SQL and Python on real data', 'Statistics and A/B testing', 'ML fundamentals and metrics', 'A business case study', 'Behavioural'],
     stages: [
-      { name: 'Data foundations', topics: ['python', 'sql', 'stats'] },
-      { name: 'Core machine learning', topics: ['ml-fundamentals', 'metrics', 'linear-models', 'trees', 'feature-eng'] },
-      { name: 'Forecasting and deep learning', topics: ['timeseries', 'nn-basics', 'llm-basics'] },
-      { name: 'From model to impact', topics: ['mlops', 'ml-system-design'] },
+      { name: 'Data foundations', topics: ['python', 'dev-tools', 'sql', 'stats', 'data-viz'] },
+      { name: 'Core machine learning', topics: ['ml-fundamentals', 'metrics', 'linear-models', 'trees', 'feature-eng', 'unsupervised'] },
+      { name: 'Forecasting and deep learning', topics: ['timeseries', 'ts-transformers', 'recsys', 'nn-basics', 'pytorch', 'llm-basics'] },
+      { name: 'From model to impact', topics: ['data-pipelines', 'mlops', 'ml-system-design', 'responsible-ai'] },
       INTERVIEW
     ],
-    projects: ['churn-prediction', 'ab-test', 'demand-forecast', 'fraud-detection']
+    projects: ['churn-prediction', 'ab-test', 'customer-segmentation', 'demand-forecast', 'fraud-detection', 'fairness-audit']
   },
   {
     id: 'da', title: 'Data Analyst',
     about: 'Answers business questions with SQL, statistics and clear reporting. A common entry point into data and AI careers.',
     rounds: ['Live SQL', 'Statistics and experiment reading', 'A take-home analysis with a short presentation', 'Behavioural'],
     stages: [
-      { name: 'Tools', topics: ['sql', 'python', 'feature-eng'] },
-      { name: 'Reasoning with data', topics: ['stats', 'metrics'] },
-      { name: 'First models', topics: ['ml-fundamentals', 'linear-models', 'timeseries'] },
+      { name: 'Tools', topics: ['sql', 'python', 'dev-tools', 'feature-eng'] },
+      { name: 'Reasoning with data', topics: ['stats', 'data-viz', 'metrics'] },
+      { name: 'First models', topics: ['ml-fundamentals', 'linear-models', 'unsupervised', 'timeseries'] },
       INTERVIEW
     ],
-    projects: ['sql-analytics', 'ab-test', 'demand-forecast']
+    projects: ['sql-analytics', 'ab-test', 'customer-segmentation', 'demand-forecast']
   },
   {
     id: 'genai', title: 'GenAI / LLM Engineer',
     about: 'Builds products on large language models: retrieval, agents, evaluation and safe deployment.',
     rounds: ['Coding in Python', 'LLM fundamentals: tokens, prompting, RAG, fine-tuning', 'Design an LLM application', 'Evaluation and safety', 'Behavioural'],
     stages: [
-      { name: 'Programming foundations', topics: ['python', 'dsa'] },
-      { name: 'ML and deep learning essentials', topics: ['ml-fundamentals', 'metrics', 'nn-basics', 'transformers'] },
-      { name: 'LLM applications', topics: ['llm-basics', 'rag', 'agents-eval', 'nlp'] },
+      { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa'] },
+      { name: 'ML and deep learning essentials', topics: ['ml-fundamentals', 'metrics', 'nn-basics', 'pytorch', 'transformers'] },
+      { name: 'LLM applications', topics: ['llm-basics', 'rag', 'agents-eval', 'nlp', 'generative-models'] },
       { name: 'Agents', topics: ['agent-arch', 'agent-prod'] },
-      { name: 'Production', topics: ['cloud-deploy', 'mlops', 'quantization', 'ml-system-design'] },
+      { name: 'Production', topics: ['cloud-deploy', 'mlops', 'quantization', 'ml-system-design', 'responsible-ai'] },
       INTERVIEW
     ],
-    projects: ['rag-assistant', 'lora-summariser', 'tool-agent']
+    projects: ['rag-assistant', 'lora-summariser', 'tool-agent', 'fairness-audit']
   },
   {
     id: 'mlops', title: 'MLOps Engineer',
     about: 'Owns the platform that trains, deploys and monitors models: pipelines, infrastructure, reliability and cost.',
     rounds: ['Coding and scripting', 'Containers, cloud and CI/CD', 'Design a training and serving platform', 'Monitoring and incident scenarios', 'Behavioural'],
     stages: [
-      { name: 'Programming foundations', topics: ['python', 'dsa', 'sql'] },
-      { name: 'Enough ML to operate it', topics: ['ml-fundamentals', 'metrics', 'training'] },
-      { name: 'Platform', topics: ['mlops', 'cloud-deploy', 'ml-system-design'] },
+      { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa', 'sql'] },
+      { name: 'Enough ML to operate it', topics: ['ml-fundamentals', 'metrics', 'pytorch', 'training'] },
+      { name: 'Platform', topics: ['data-pipelines', 'mlops', 'cloud-deploy', 'ml-system-design'] },
       { name: 'Performance and cost', topics: ['cuda-gpu', 'quantization', 'edge-deploy', 'agent-prod'] },
       INTERVIEW
     ],
@@ -75,9 +75,9 @@ export const ROLES = [
     about: 'Builds systems that understand images and video: classification, detection, segmentation and geometry, often in real time.',
     rounds: ['Coding in Python (often with numpy)', 'Deep learning and CNN fundamentals', 'Detection, segmentation and metrics', 'Camera geometry', 'A past project and deployment constraints'],
     stages: [
-      { name: 'Programming foundations', topics: ['python', 'dsa', 'algo-advanced'] },
-      { name: 'ML and deep learning', topics: ['ml-fundamentals', 'metrics', 'nn-basics', 'training'] },
-      { name: 'Vision', topics: ['cv-basics', 'cv-detection', 'cv-geometry', 'transformers'] },
+      { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa', 'algo-advanced'] },
+      { name: 'ML and deep learning', topics: ['ml-fundamentals', 'metrics', 'nn-basics', 'pytorch', 'training'] },
+      { name: 'Vision', topics: ['cv-basics', 'cv-detection', 'cv-geometry', 'transformers', 'generative-models'] },
       { name: 'Deployment', topics: ['quantization', 'edge-deploy', 'cpp-deploy', 'cuda-gpu'] },
       INTERVIEW
     ],
@@ -88,10 +88,10 @@ export const ROLES = [
     about: 'Builds systems that understand and generate language: classification, extraction, summarisation, translation and search.',
     rounds: ['Coding in Python', 'Text representations and transformers', 'Fine-tuning and evaluation', 'Design a language system', 'Behavioural'],
     stages: [
-      { name: 'Programming foundations', topics: ['python', 'dsa', 'stats'] },
-      { name: 'ML and deep learning', topics: ['ml-fundamentals', 'metrics', 'nn-basics', 'training'] },
+      { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa', 'stats'] },
+      { name: 'ML and deep learning', topics: ['ml-fundamentals', 'metrics', 'nn-basics', 'pytorch', 'training'] },
       { name: 'Language', topics: ['nlp', 'rnn', 'transformers', 'llm-basics'] },
-      { name: 'Applications', topics: ['rag', 'agents-eval', 'mlops'] },
+      { name: 'Applications', topics: ['rag', 'agents-eval', 'mlops', 'responsible-ai'] },
       INTERVIEW
     ],
     projects: ['text-classifier', 'lora-summariser', 'rag-assistant']
@@ -101,10 +101,10 @@ export const ROLES = [
     about: 'Builds the perception stack for driver assistance, robots and drones: detection, tracking and sensor fusion on embedded hardware.',
     rounds: ['Coding in Python and C++', 'Deep learning and detection', 'Kalman filtering and tracking', 'Sensors and fusion architecture', 'Embedded deployment and safety'],
     stages: [
-      { name: 'Programming foundations', topics: ['python', 'dsa', 'algo-advanced'] },
-      { name: 'ML and deep learning', topics: ['ml-fundamentals', 'metrics', 'nn-basics', 'training'] },
+      { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa', 'algo-advanced'] },
+      { name: 'ML and deep learning', topics: ['ml-fundamentals', 'metrics', 'nn-basics', 'pytorch', 'training'] },
       { name: 'Vision', topics: ['cv-basics', 'cv-detection', 'cv-geometry'] },
-      { name: 'Sensors, tracking and fusion', topics: ['sensors', 'kalman', 'fusion-arch'] },
+      { name: 'Sensors, tracking and fusion', topics: ['sensors', 'kalman', 'fusion-arch', 'localization-planning'] },
       { name: 'Embedded deployment', topics: ['quantization', 'cpp-deploy', 'edge-deploy', 'ecu-deploy'] },
       INTERVIEW
     ],
@@ -115,8 +115,8 @@ export const ROLES = [
     about: 'Makes models run on small, cheap, low-power hardware: microcontrollers, phones, cameras and vehicle ECUs.',
     rounds: ['Coding in C or C++ and Python', 'ML fundamentals', 'Quantisation and model compression', 'Embedded constraints: memory, timing, fixed point', 'A deployment you have done'],
     stages: [
-      { name: 'Programming foundations', topics: ['python', 'dsa'] },
-      { name: 'Models that fit small devices', topics: ['ml-fundamentals', 'metrics', 'trees', 'nn-basics', 'training'] },
+      { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa'] },
+      { name: 'Models that fit small devices', topics: ['ml-fundamentals', 'metrics', 'trees', 'nn-basics', 'pytorch', 'training'] },
       { name: 'Signals and images', topics: ['timeseries', 'rnn', 'cv-basics'] },
       { name: 'Deployment', topics: ['quantization', 'edge-deploy', 'cpp-deploy', 'cuda-gpu', 'ecu-deploy'] },
       INTERVIEW
@@ -316,6 +316,33 @@ export const PROJECTS = [
     steps: ['Understand the data: engines, cycles, sensors, operating conditions', 'Build windows and a remaining-useful-life target without leakage', 'Baseline: a linear or tree model on window statistics', 'Train an LSTM or small transformer on the sequences', 'Evaluate by engine, not by row, and compare with the baseline', 'Discuss the cost of predicting too early against too late'],
     proof: std('A plot of predicted against true remaining life for held-out engines'),
     talk: ['Why you split by engine', 'Whether the neural model earned its complexity', 'How asymmetric error costs change the design']
+  },
+  {
+    id: 'customer-segmentation', title: 'Customer segmentation', level: 'Starter', topics: ['unsupervised', 'feature-eng', 'data-viz'],
+    useCase: 'Retailers, banks and telecoms group customers by behaviour to tailor offers, pricing and service. Segmentation built on recency, frequency and monetary value (RFM) is a long-standing marketing practice.',
+    build: 'Customer segments built from purchase behaviour, profiled and named so a marketing team can act on them.',
+    data: 'Online Retail II (UCI Machine Learning Repository): two years of transactions from an online retailer.',
+    steps: ['Clean the transactions: returns, missing customer ids, duplicates', 'Compute recency, frequency and monetary value per customer', 'Scale the features and choose k with the elbow and silhouette methods', 'Cluster with k-means and compare with one other method', 'Profile each segment with charts and give it a business name', 'Recommend one action per segment and how you would measure it'],
+    proof: std('A one-page segment profile with a chart per segment'),
+    talk: ['Why you scaled the features and how k was chosen', 'How you checked the segments are stable', 'How a marketing team would use them']
+  },
+  {
+    id: 'rl-agent', title: 'Train a reinforcement-learning agent', level: 'Core', topics: ['rl', 'pytorch', 'nn-basics'],
+    useCase: 'Reinforcement learning optimises sequences of decisions: robot control, game playing, recommendation and resource scheduling. CartPole and LunarLander are the standard first benchmarks.',
+    build: 'An agent that learns to balance a pole (CartPole) with tabular Q-learning on a discretised state, then with a small DQN, compared against a random policy.',
+    data: 'Gymnasium environments CartPole-v1 and, as a stretch, LunarLander.',
+    steps: ['Run a random policy and record the average episode return', 'Discretise the state and train tabular Q-learning', 'Plot returns per episode and tune the exploration schedule', 'Replace the table with a small neural network (DQN) with replay and a target network', 'Compare learning curves over several random seeds', 'Record a video of the trained agent'],
+    proof: std('Learning curves averaged over seeds, against the random baseline'),
+    talk: ['Exploration against exploitation and your epsilon schedule', 'Why DQN needs replay and a target network', 'Why results vary between seeds and how you reported that']
+  },
+  {
+    id: 'fairness-audit', title: 'Fairness audit of a classifier', level: 'Core', topics: ['responsible-ai', 'metrics', 'trees'],
+    useCase: 'Lenders, insurers and hiring platforms must show their models do not treat groups unfairly; regulators and courts increasingly expect such audits.',
+    build: 'An income classifier audited across groups, with a mitigation and an honest account of the accuracy cost.',
+    data: 'Adult (Census Income) dataset from the UCI Machine Learning Repository.',
+    steps: ['Train a gradient-boosted classifier and record overall metrics', 'Slice selection rate, true-positive rate and false-positive rate by group', 'Add confidence intervals so small groups are not over-read', 'Investigate proxies for the protected attribute', 'Apply one mitigation, such as reweighting or group thresholds', 'Write a model card with the trade-offs'],
+    proof: std('A model card with per-group metrics before and after mitigation'),
+    talk: ['Which fairness criterion you chose and why', 'Why removing the protected column is not enough', 'The accuracy cost of mitigation and who should decide it']
   }
 ];
 
