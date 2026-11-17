@@ -9,7 +9,7 @@
 <script type="module">
 import { TOPICS, loadLesson } from './js/content.js';
 import { runPython, gradeSql } from './js/runner.js';
-const log = document.getElementById('log'); const lines = []; let bad = 0, n = 0;
+const log = document.getElementById('log'); const lines = []; let bad = 0, n = 0, steps = 0;
 const say = (ok, msg) => { if (!ok) bad++; lines.push((ok ? 'ok   ' : 'FAIL ') + msg); log.textContent = lines.join('\n'); };
 const ids = new Set();
 for (const t of TOPICS) {
@@ -18,6 +18,16 @@ for (const t of TOPICS) {
   if (lesson.length < 200) say(false, `${t.id}: lesson missing or too short`);
   t.quiz.forEach((q, i) => { if (!(q.answer >= 0 && q.answer < q.options.length) || !q.why) say(false, `${t.id}: quiz ${i} invalid`); });
   t.interview.forEach((q, i) => { if (!q.points?.length || !q.model) say(false, `${t.id}: interview ${i} invalid`); });
+  t.path.forEach((l, li) => l.steps.forEach((s, si) => {
+    const where = `${t.id} path ${li}:${si}`;
+    const bad = (s.t === 'info' && !(s.h && s.b)) || (s.t === 'mc' && !(s.q && s.o?.length >= 2 && new Set(s.o).size === s.o.length))
+      || (s.t === 'tf' && !(s.q && typeof s.a === 'boolean')) || (s.t === 'fill' && !(s.q.split('___').length === 2 && s.o?.length >= 2 && new Set(s.o).size === s.o.length))
+      || (s.t === 'type' && !(s.q && s.a?.length)) || (s.t === 'order' && !(s.lines?.length >= 2))
+      || (s.t === 'match' && !(s.pairs?.length >= 2 && new Set(s.pairs.map(p => p[0])).size === s.pairs.length && new Set(s.pairs.map(p => p[1])).size === s.pairs.length))
+      || !['info', 'mc', 'tf', 'fill', 'type', 'order', 'match'].includes(s.t);
+    if (bad) say(false, where + ' is malformed');
+    steps++;
+  }));
   for (const task of t.tasks) {
     n++;
     if (ids.has(task.id)) say(false, 'duplicate task id ' + task.id); ids.add(task.id);
@@ -35,7 +45,7 @@ for (const t of TOPICS) {
     }
   }
 }
-lines.push('', `DONE: ${TOPICS.length} topics, ${n} tasks, ${bad} problem(s)`);
+lines.push('', `DONE: ${TOPICS.length} topics, ${n} tasks, ${TOPICS.filter(t => t.path.length).length} topics with a path, ${steps} path steps, ${bad} problem(s)`);
 log.textContent = lines.join('\n');
 log.className = bad ? 'bad' : 'ok';
 </script>

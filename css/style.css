@@ -112,6 +112,45 @@ summary{cursor:pointer;color:var(--accent)}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:12px 0}
 .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
 .stat b{display:block;font-size:1.6rem;font-variant-numeric:tabular-nums;line-height:1.2}
+/* Learning path and lesson player */
+.btn.big{padding:10px 20px;font-size:1.05rem}
+.stats.game .bar{margin-top:6px}
+.path{display:flex;flex-direction:column;gap:14px;margin:18px 0 26px;max-width:520px}
+.node{display:flex;align-items:center;gap:14px;color:var(--fg);text-decoration:none;margin-left:calc(var(--o,0) * 34px)}
+.node .dot{flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:1.15rem;background:var(--panel);border:3px solid var(--line);box-shadow:0 4px 0 var(--line);transition:transform .1s}
+.node:hover .dot{transform:translateY(-2px)}
+.node:active .dot{transform:translateY(3px);box-shadow:none}
+.node.done .dot{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.node.cur .dot{border-color:var(--accent);box-shadow:0 4px 0 var(--accent),0 0 0 6px var(--accent-soft)}
+.node small{display:block;color:var(--muted)}
+.player{max-width:640px;margin:0 auto}
+.player h2{margin:.9em 0 .6em;font-size:1.25rem;line-height:1.4}
+.player .pbar{max-width:none;margin:10px 0 6px}
+.player .pbar i{transition:width .3s}
+.player .info h2{margin-top:.2em}
+.opts{display:grid;gap:10px;margin:14px 0}
+.opt,.player .chip{text-align:left;padding:11px 14px;border:2px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:0 2px 0 var(--line);font-size:1rem}
+.opt.sel,.player .chip.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--panel));opacity:1}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel));opacity:1}
+.opt.dim{opacity:.55}
+.bank,.ansbox{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.ansbox{min-height:54px;padding:10px;border:2px dashed var(--line);border-radius:12px;flex-direction:column;align-items:stretch}
+.player .chip.line{font-family:var(--mono);font-size:.875rem;white-space:pre-wrap}
+.bank .chip.line{flex:1 1 100%}
+.slot{display:inline-block;min-width:5em;border-bottom:3px solid var(--accent);text-align:center;font-weight:700;color:var(--accent)}
+pre.fillq .slot{min-width:4em}
+.typed{width:100%;font-size:1.1rem;padding:11px 14px;border-width:2px;border-radius:12px;font-family:var(--mono)}
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match>div{display:grid;gap:10px;align-content:start}
+.fb{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:18px;padding:14px 16px;border-radius:12px}
+.fb.good{background:color-mix(in srgb,var(--ok) 15%,var(--panel));color:var(--fg)}
+.fb.bad{background:color-mix(in srgb,var(--bad) 13%,var(--panel));color:var(--fg)}
+.fb.good b{color:var(--ok)}.fb.bad b{color:var(--bad)}
+.fb .ans{margin:2px 0}
+.fb pre{margin:.3em 0}
+.fb button{flex:none;padding:10px 22px;font-size:1rem}
+@media (prefers-reduced-motion:reduce){.node .dot,.player .pbar i{transition:none}}
 .demo{max-width:none}
 .demo .cv canvas{border:1px solid var(--line);border-radius:8px;margin:8px 0;cursor:crosshair}
 .demo figure{margin:0;text-align:center}

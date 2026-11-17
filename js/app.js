@@ -1,6 +1,8 @@
 import { store } from './store.js';
 import { md, esc } from './md.js';
-import { MODULES, TOPICS, TRACKS, topicById, inTrack, loadLesson } from './content.js';
+import { MODULES, TOPICS, TRACKS, topicById, inTrack, loadLesson, levelOf, stepById } from './content.js';
+import { playLesson, stopPlayer } from './learn.js';
+import { parseJson } from './llm.js';
 import { runPython, runSql, gradeSql } from './runner.js';
 import { createEditor } from './editor.js';
 import { renderInterview, stopSpeech } from './interview.js';
@@ -22,7 +24,7 @@ document.getElementById('theme').onclick = () => {
 };
 
 function route() {
-  view++; stopSpeech();
+  view++; stopSpeech(); stopPlayer();
   const [path, query] = location.hash.replace(/^#\/?/, '').split('?');
   const parts = path.split('/').filter(Boolean);
   const q = new URLSearchParams(query || '');
@@ -30,7 +32,8 @@ function route() {
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.nav === (page === 'topic' ? '' : page)));
   window.scrollTo(0, 0);
   if (!page) home();
-  else if (page === 'topic') topicView(parts[1], parts[2] || 'lesson', q);
+  else if (page === 'topic') topicView(parts[1], parts[2] || '', q);
+  else if (page === 'review') reviewView();
   else if (page === 'playground') playground();
   else if (page === 'interview') renderInterview(app, q);
   else if (page === 'dashboard') dashboard();
@@ -44,11 +47,31 @@ function home() {
   const track = store.state.track;
   const topics = TOPICS.filter(t => inTrack(t, track));
   const overall = Math.round(avg(topics.map(t => store.topicScore(t).pct)));
+  const st = store.state, goal = st.goal || 30, today = store.todayXp();
+  let next = null;
+  for (const t of topics) {
+    const i = t.path.findIndex((l, k) => !store.lessonDone(`${t.id}:${k}`));
+    if (i >= 0) { next = { t, i }; if (store.topicScore(t).pathDone) break; }
+  }
+  // Prefer a topic already in progress; otherwise the first unfinished one.
+  const first = topics.find(t => t.path.some((l, k) => !store.lessonDone(`${t.id}:${k}`)));
+  if (next && !store.topicScore(next.t).pathDone && first) next = { t: first, i: first.path.findIndex((l, k) => !store.lessonDone(`${first.id}:${k}`)) };
+  const reviewN = Object.keys(st.review).length;
   app.innerHTML = `
-  <h1>Get interview-ready for AI jobs</h1>
-  <p class="muted">For roles in Egypt and remote roles you can do from Egypt. Each topic has a short lesson, coding tasks with tests, a quiz and voice interview questions.</p>
+  <h1>From zero to interview-ready in AI</h1>
+  <p class="muted">Short lessons with instant feedback, then real coding tasks, quizzes and voice mock interviews. For jobs in Egypt and remote roles you can do from Egypt.</p>
+  <div class="stats game">
+    <div class="stat"><b>🔥 ${store.streak()}</b><span class="muted small">day streak</span></div>
+    <div class="stat"><b>${st.xp} XP</b><span class="muted small">Level ${store.level()}</span></div>
+    <div class="stat"><b>${Math.min(today, goal)} / ${goal} XP</b><span class="muted small">today's goal</span>${bar(Math.min(100, Math.round(100 * today / goal)))}</div>
+    <div class="stat"><b>${overall}%</b><span class="muted small">overall progress</span>${bar(overall)}</div>
+  </div>
+  <div class="row">
+    ${next ? `<a class="btn primary big" href="#/topic/${next.t.id}/learn?l=${next.i}">${store.topicScore(next.t).pathDone ? 'Continue' : 'Start'}: ${esc(next.t.title)}</a>` : ''}
+    ${reviewN ? `<a class="btn" href="#/review">Review ${reviewN} mistake${reviewN > 1 ? 's' : ''}</a>` : ''}
+    <a class="btn" href="#/interview">Mock interview</a>
+  </div>
   <div class="chips" role="group" aria-label="Role">${TRACKS.map(t => `<button class="chip ${t.id === track ? 'on' : ''}" data-track="${t.id}">${t.name}</button>`).join('')}</div>
-  <div class="row"><span class="score">${overall}%</span> ${bar(overall, true)} <a class="btn primary" href="#/interview">Start a mock interview</a></div>
   ${MODULES.map(m => {
     const ts = topics.filter(t => t.module === m.id);
     return ts.length ? `<h2>${m.title}</h2><div class="grid">${ts.map(card).join('')}</div>` : '';
@@ -56,8 +79,8 @@ function home() {
   app.querySelectorAll('[data-track]').forEach(b => b.onclick = () => { store.state.track = b.dataset.track; store.save(); home(); });
 }
 function card(t) {
-  const { pct, started } = store.topicScore(t);
-  const bits = [t.tasks.length && `${t.tasks.length} task${t.tasks.length > 1 ? 's' : ''}`, t.quiz.length && 'quiz', t.interview.length && `${t.interview.length} interview Qs`].filter(Boolean).join(' · ');
+  const { pct, started, pathDone } = store.topicScore(t);
+  const bits = [t.path.length && `${pathDone}/${t.path.length} lessons`, t.tasks.length && `${t.tasks.length} coding task${t.tasks.length > 1 ? 's' : ''}`, t.quiz.length && 'quiz'].filter(Boolean).join(' · ');
   return `<a class="topic" href="#/topic/${t.id}"><b>${esc(t.title)}</b><span class="muted small">${bits}</span>
     ${bar(pct)}<span class="small ${started ? '' : 'muted'}">${started ? pct + '%' : 'Not started'}</span></a>`;
 }
@@ -66,15 +89,17 @@ function card(t) {
 async function topicView(id, tab, q) {
   const t = topicById(id);
   if (!t) { app.innerHTML = '<h1>Topic not found</h1><p><a href="#/">Back to topics</a></p>'; return; }
-  const tabs = [['lesson', 'Lesson'], t.tasks.length && ['practice', `Practice (${t.tasks.length})`],
+  const tabs = [t.path.length && ['learn', 'Learn'], ['lesson', 'Summary'], t.tasks.length && ['practice', `Code (${t.tasks.length})`],
     t.quiz.length && ['quiz', 'Quiz'], t.interview.length && ['interview', 'Interview questions']].filter(Boolean);
-  if (!tabs.some(x => x[0] === tab)) tab = 'lesson';
+  if (!tabs.some(x => x[0] === tab)) tab = tabs[0][0];
   const nextTab = tabs[tabs.findIndex(x => x[0] === tab) + 1];
+  if (tab === 'learn' && q.has('l') && t.path[+q.get('l')]) return lessonView(t, +q.get('l'));
   app.innerHTML = `<a class="back" href="#/">← All topics</a><h1>${esc(t.title)}</h1>
     <nav class="tabs">${tabs.map(([k, label]) => `<a class="${k === tab ? 'on' : ''}" href="#/topic/${t.id}/${k}">${label}</a>`).join('')}</nav><div id="pane"></div>`;
   const pane = app.querySelector('#pane');
   const nextLink = nextTab ? `<p><a class="btn primary" href="#/topic/${t.id}/${nextTab[0]}">Next: ${nextTab[1]}</a></p>` : '';
-  if (tab === 'lesson') {
+  if (tab === 'learn') pathView(pane, t);
+  else if (tab === 'lesson') {
     const mine = view;
     pane.innerHTML = '<p class="muted">Loading…</p>';
     const text = await loadLesson(t);
@@ -88,6 +113,61 @@ async function topicView(id, tab, q) {
     ${t.interview.map((x, i) => `<div class="q"><b>${i + 1}. ${esc(x.q)}</b>
       <details><summary>Key points and model answer</summary><ul>${x.points.map(p => `<li>${esc(p[0])}</li>`).join('')}</ul><p>${esc(x.model)}</p></details></div>`).join('')}`;
   }
+}
+
+/* ---------- Learning path ---------- */
+function pathView(pane, t) {
+  const n = t.path.length;
+  const cur = t.path.findIndex((l, i) => !store.lessonDone(`${t.id}:${i}`));
+  const node = (href, dot, title, sub, cls = '', i = 0) => `<a class="node ${cls}" style="--o:${[0, 1, 2, 1][i % 4]}" href="${href}"><span class="dot">${dot}</span><span><b>${esc(title)}</b><small>${sub}</small></span></a>`;
+  const allDone = cur < 0;
+  pane.innerHTML = `<p class="muted">Work down the path. Each lesson takes about five minutes.</p><div class="path">
+    ${t.path.map((l, i) => { const done = store.lessonDone(`${t.id}:${i}`); return node(`#/topic/${t.id}/learn?l=${i}`, done ? '✓' : i + 1, l.title, `${levelOf(i, n)} · ${l.steps.length} steps${i === cur ? ' · <b>start here</b>' : ''}`, (done ? 'done ' : '') + (i === cur ? 'cur' : ''), i); }).join('')}
+    ${t.tasks.length ? node(`#/topic/${t.id}/practice`, '⌨', 'Write real code', `${t.tasks.filter(k => store.task(k.id).best === 1).length} of ${t.tasks.length} tasks solved`, t.tasks.every(k => store.task(k.id).best === 1) ? 'done' : allDone ? 'cur' : '', n) : ''}
+    ${t.quiz.length ? node(`#/topic/${t.id}/quiz`, '?', 'Checkpoint quiz', store.state.quiz[t.id] ? `Best ${Math.round(store.state.quiz[t.id].best * 100)}%` : 'Test yourself', store.state.quiz[t.id]?.best >= 0.8 ? 'done' : '', n + 1) : ''}
+    ${t.interview.length ? node(`#/interview?topic=${t.id}`, '🎙', 'Say it out loud', 'Voice mock interview on this topic', '', n + 2) : ''}
+  </div>
+  <div class="card"><b>Want more?</b> <span class="muted">Generate fresh exercises on this topic with your AI provider.</span>
+    <div class="row"><select id="ai-level"><option>Beginner</option><option selected>Intermediate</option><option>Advanced</option><option>Interview level</option></select>
+    <button id="ai-more">Generate extra practice</button><span id="ai-status" class="small muted"></span></div></div>`;
+  pane.querySelector('#ai-more').onclick = () => aiPractice(t, pane.querySelector('#ai-level').value, pane.querySelector('#ai-status'));
+}
+
+function lessonView(t, i) {
+  const l = t.path[i], more = i + 1 < t.path.length;
+  playLesson(app, {
+    title: `${t.title} · ${l.title}`, steps: l.steps, lessonId: `${t.id}:${i}`, backHref: `#/topic/${t.id}/learn`,
+    nextHref: more ? `#/topic/${t.id}/learn?l=${i + 1}` : t.tasks.length ? `#/topic/${t.id}/practice` : t.quiz.length ? `#/topic/${t.id}/quiz` : '',
+    nextLabel: more ? 'Next lesson' : t.tasks.length ? 'Now write real code' : 'Take the quiz'
+  });
+}
+
+function reviewView() {
+  const ids = Object.keys(store.state.review);
+  const steps = [];
+  for (const id of ids) { const s = stepById(id); if (s) steps.push(s); else store.clearReview(id); }
+  if (!steps.length) { app.innerHTML = '<h1>Review</h1><p class="muted">Nothing to review. Steps you get wrong in lessons are collected here.</p><p><a class="btn" href="#/">Back to topics</a></p>'; return; }
+  playLesson(app, { title: 'Review your mistakes', steps: steps.sort(() => Math.random() - 0.5).slice(0, 12), lessonId: 'review', backHref: '#/', review: true });
+}
+
+async function aiPractice(t, level, status) {
+  if (!hasProvider()) { status.innerHTML = 'Needs an AI provider. <a href="#/settings">Set up a free one</a>.'; return; }
+  const mine = view;
+  status.textContent = 'Writing exercises…';
+  try {
+    const { text } = await chat({
+      system: `You write practice exercises for engineers preparing for AI job interviews. Reply with JSON only, in this shape:
+{"steps":[{"t":"mc","q":"question","o":["the correct answer","wrong","wrong","wrong"],"w":"one-sentence explanation"},{"t":"tf","q":"a statement","a":true,"w":"one-sentence explanation"},{"t":"type","q":"question whose answer is one word or number","a":["answer","accepted alternative"],"w":"one-sentence explanation"}]}
+Rules: write exactly 8 exercises, mostly "mc". In "mc" the FIRST option must be the correct one and all options must be short. Every exercise must be factually correct and unambiguous. Vary the sub-topics. No markdown outside inline code in backticks.`,
+      messages: [{ role: 'user', content: `Topic: ${t.title}. Difficulty: ${level}. Cover these lesson themes: ${t.path.map(l => l.title).join('; ') || t.title}.` }]
+    });
+    const steps = (parseJson(text).steps || []).filter(s =>
+      (s.t === 'mc' && s.q && Array.isArray(s.o) && s.o.length >= 2) || (s.t === 'tf' && s.q && typeof s.a === 'boolean') || (s.t === 'type' && s.q && [].concat(s.a || []).length))
+      .map(s => ({ ...s, o: s.o?.map(String), a: s.t === 'type' ? [].concat(s.a).map(String) : s.a }));
+    if (mine !== view) return;
+    if (!steps.length) throw new Error('the model returned no usable exercises');
+    playLesson(app, { title: `${t.title} · AI practice (${level})`, steps, lessonId: `${t.id}:ai`, backHref: `#/topic/${t.id}/learn`, noReview: true });
+  } catch (e) { if (mine === view) status.textContent = 'Could not generate: ' + e.message; }
 }
 
 function resultTable(r) {

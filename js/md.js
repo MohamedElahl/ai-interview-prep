@@ -1,7 +1,7 @@
 // Tiny Markdown renderer: headings, lists, tables, fenced code, inline code/bold/italic/links.
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-function inline(s) {
+export function inline(s) {
   s = esc(s);
   const codes = [];
   s = s.replace(/`([^`]+)`/g, (m, c) => { codes.push(c); return `\u0000${codes.length - 1}\u0000`; });
