@@ -5,7 +5,7 @@ const defaults = () => ({
   providers: {}, primary: 'groq',
   voice: { tts: true, auto: true, rate: 1, lang: 'en-US', name: '' },
   scratch: '',
-  xp: 0, days: {}, lessons: {}, review: {}, goal: 30
+  xp: 0, days: {}, lessons: {}, review: {}, goal: 30, projects: {}
 });
 const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
 const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -41,6 +41,16 @@ export const store = {
   },
   addReview(id) { s.review[id] = 1; this.save(); },
   clearReview(id) { delete s.review[id]; this.save(); },
+
+  // Project milestones: ticking one earns XP the first time only.
+  milestone(pid, i) { return !!s.projects[pid]?.[i]; },
+  projectDone(pid, n) { let c = 0; for (let i = 0; i < n; i++) if (s.projects[pid]?.[i]) c++; return c; },
+  toggleMilestone(pid, i) {
+    const p = s.projects[pid] ||= {};
+    if (p[i]) delete p[i];
+    else { p[i] = 1; if (!p['xp' + i]) { p['xp' + i] = 1; this.addXp(10); } }
+    this.save();
+  },
 
   task(id) { return s.tasks[id] || { best: 0, attempts: 0 }; },
   setTaskScore(id, score) {

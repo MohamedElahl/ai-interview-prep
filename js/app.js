@@ -1,6 +1,6 @@
 import { store } from './store.js';
 import { md, esc } from './md.js';
-import { MODULES, TOPICS, TRACKS, topicById, inTrack, loadLesson, levelOf, stepById } from './content.js';
+import { MODULES, TOPICS, ROLES, PROJECTS, topicById, projectById, roleById, roleTopics, loadLesson, levelOf, stepById } from './content.js';
 import { playLesson, stopPlayer } from './learn.js';
 import { parseJson } from './llm.js';
 import { runPython, runSql, gradeSql } from './runner.js';
@@ -34,6 +34,7 @@ function route() {
   if (!page) home();
   else if (page === 'topic') topicView(parts[1], parts[2] || '', q);
   else if (page === 'review') reviewView();
+  else if (page === 'project') projectView(parts[1]);
   else if (page === 'playground') playground();
   else if (page === 'interview') renderInterview(app, q);
   else if (page === 'dashboard') dashboard();
@@ -42,47 +43,113 @@ function route() {
 }
 window.addEventListener('hashchange', route);
 
-/* ---------- Home ---------- */
-function home() {
-  const track = store.state.track;
-  const topics = TOPICS.filter(t => inTrack(t, track));
-  const overall = Math.round(avg(topics.map(t => store.topicScore(t).pct)));
+/* ---------- Home: job picker and job roadmap ---------- */
+const openLesson = t => t.path.findIndex((l, k) => !store.lessonDone(`${t.id}:${k}`));
+const nextLesson = topics => {
+  const t = topics.find(x => store.topicScore(x).pathDone && openLesson(x) >= 0) || topics.find(x => openLesson(x) >= 0);
+  return t ? { t, i: openLesson(t) } : null;
+};
+const projectPct = p => Math.round(100 * store.projectDone(p.id, p.steps.length) / p.steps.length);
+const topicsOf = role => roleTopics(role).map(topicById).filter(Boolean);
+function readiness(role) {
+  const topicPct = avg(topicsOf(role).map(t => store.topicScore(t).pct));
+  const projPct = avg(role.projects.map(projectById).filter(Boolean).map(projectPct));
+  return Math.round(0.7 * topicPct + 0.3 * projPct);
+}
+function statsStrip(label, pct) {
   const st = store.state, goal = st.goal || 30, today = store.todayXp();
-  let next = null;
-  for (const t of topics) {
-    const i = t.path.findIndex((l, k) => !store.lessonDone(`${t.id}:${k}`));
-    if (i >= 0) { next = { t, i }; if (store.topicScore(t).pathDone) break; }
-  }
-  // Prefer a topic already in progress; otherwise the first unfinished one.
-  const first = topics.find(t => t.path.some((l, k) => !store.lessonDone(`${t.id}:${k}`)));
-  if (next && !store.topicScore(next.t).pathDone && first) next = { t: first, i: first.path.findIndex((l, k) => !store.lessonDone(`${first.id}:${k}`)) };
-  const reviewN = Object.keys(st.review).length;
-  app.innerHTML = `
-  <h1>From zero to interview-ready in AI</h1>
-  <p class="muted">Short lessons with instant feedback, then real coding tasks, quizzes and voice mock interviews. For jobs in Egypt and remote roles you can do from Egypt.</p>
-  <div class="stats game">
+  return `<div class="stats game">
     <div class="stat"><b>🔥 ${store.streak()}</b><span class="muted small">day streak</span></div>
     <div class="stat"><b>${st.xp} XP</b><span class="muted small">Level ${store.level()}</span></div>
     <div class="stat"><b>${Math.min(today, goal)} / ${goal} XP</b><span class="muted small">today's goal</span>${bar(Math.min(100, Math.round(100 * today / goal)))}</div>
-    <div class="stat"><b>${overall}%</b><span class="muted small">overall progress</span>${bar(overall)}</div>
-  </div>
-  <div class="row">
+    <div class="stat"><b>${pct}%</b><span class="muted small">${label}</span>${bar(pct)}</div>
+  </div>`;
+}
+function actionRow(topics) {
+  const next = nextLesson(topics), reviewN = Object.keys(store.state.review).length;
+  return `<div class="row">
     ${next ? `<a class="btn primary big" href="#/topic/${next.t.id}/learn?l=${next.i}">${store.topicScore(next.t).pathDone ? 'Continue' : 'Start'}: ${esc(next.t.title)}</a>` : ''}
     ${reviewN ? `<a class="btn" href="#/review">Review ${reviewN} mistake${reviewN > 1 ? 's' : ''}</a>` : ''}
-    <a class="btn" href="#/interview">Mock interview</a>
-  </div>
-  <div class="chips" role="group" aria-label="Role">${TRACKS.map(t => `<button class="chip ${t.id === track ? 'on' : ''}" data-track="${t.id}">${t.name}</button>`).join('')}</div>
+    <a class="btn" href="#/interview">Mock interview</a></div>`;
+}
+function bindTracks() {
+  app.querySelectorAll('[data-track]').forEach(b => b.onclick = () => { store.state.track = b.dataset.track; store.save(); home(); window.scrollTo(0, 0); });
+}
+function home() {
+  const role = roleById(store.state.track);
+  if (role) roleHome(role); else jobPicker();
+}
+function jobPicker() {
+  const overall = Math.round(avg(TOPICS.map(t => store.topicScore(t).pct)));
+  app.innerHTML = `
+  <h1>Which job do you want?</h1>
+  <p class="muted">Pick a target job. You get an ordered roadmap of every topic it needs, taught from zero in short interactive lessons, and portfolio projects built on use cases that companies run in production.</p>
+  <div class="grid roles">${ROLES.map(r => {
+    const pct = readiness(r);
+    return `<button class="topic role" data-track="${r.id}"><b>${esc(r.title)}</b><span class="muted small">${esc(r.about)}</span>
+      <span class="small">${roleTopics(r).length} topics · ${r.projects.length} projects${pct ? ` · ${pct}% ready` : ''}</span></button>`;
+  }).join('')}</div>
+  ${store.state.xp ? statsStrip('all topics', overall) + actionRow(TOPICS) : ''}
+  <h2>Or browse every topic</h2>
   ${MODULES.map(m => {
-    const ts = topics.filter(t => t.module === m.id);
-    return ts.length ? `<h2>${m.title}</h2><div class="grid">${ts.map(card).join('')}</div>` : '';
+    const ts = TOPICS.filter(t => t.module === m.id);
+    return ts.length ? `<h3>${m.title}</h3><div class="grid">${ts.map(card).join('')}</div>` : '';
   }).join('')}`;
-  app.querySelectorAll('[data-track]').forEach(b => b.onclick = () => { store.state.track = b.dataset.track; store.save(); home(); });
+  bindTracks();
+}
+function roleHome(role) {
+  const ts = topicsOf(role);
+  app.innerHTML = `
+  <button class="ghost back" data-track="all">← Change target job</button>
+  <h1>${esc(role.title)}</h1>
+  <p class="muted">${esc(role.about)}</p>
+  ${statsStrip('job readiness', readiness(role))}
+  ${actionRow(ts)}
+  <details><summary>What the interviews for this job look like</summary><ol>${role.rounds.map(r => `<li>${esc(r)}</li>`).join('')}</ol></details>
+  <h2>Your roadmap</h2>
+  <p class="muted">Work through the stages in order. Each topic goes from zero to interview level.</p>
+  ${role.stages.map((st, i) => `<h3>Stage ${i + 1} · ${esc(st.name)}</h3><div class="grid">${st.topics.map(topicById).filter(Boolean).map(card).join('')}</div>`).join('')}
+  <h2>Projects that prove it</h2>
+  <p class="muted">Each project is built on a use case that companies run in production, with a well-known public dataset. Finish them and you have evidence to show, not only claims.</p>
+  <div class="grid">${role.projects.map(projectById).filter(Boolean).map(projectCard).join('')}</div>`;
+  bindTracks();
 }
 function card(t) {
   const { pct, started, pathDone } = store.topicScore(t);
   const bits = [t.path.length && `${pathDone}/${t.path.length} lessons`, t.tasks.length && `${t.tasks.length} coding task${t.tasks.length > 1 ? 's' : ''}`, t.quiz.length && 'quiz'].filter(Boolean).join(' · ');
   return `<a class="topic" href="#/topic/${t.id}"><b>${esc(t.title)}</b><span class="muted small">${bits}</span>
     ${bar(pct)}<span class="small ${started ? '' : 'muted'}">${started ? pct + '%' : 'Not started'}</span></a>`;
+}
+function projectCard(p) {
+  const done = store.projectDone(p.id, p.steps.length);
+  return `<a class="topic" href="#/project/${p.id}"><span><span class="badge">${p.level} project</span></span><b>${esc(p.title)}</b>
+    <span class="muted small">${esc(p.build)}</span>${bar(projectPct(p))}<span class="small ${done ? '' : 'muted'}">${done} of ${p.steps.length} milestones</span></a>`;
+}
+
+/* ---------- Project ---------- */
+function projectView(id) {
+  const p = projectById(id);
+  if (!p) { app.innerHTML = '<h1>Project not found</h1><p><a href="#/">Back</a></p>'; return; }
+  const jobs = ROLES.filter(r => r.projects.includes(id)).map(r => r.title);
+  const list = a => `<ul>${a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+  app.innerHTML = `<a class="back" href="#/">← Back to roadmap</a>
+  <h1>${esc(p.title)}</h1>
+  <p><span class="badge">${p.level} project</span> <span class="muted small">For: ${jobs.map(esc).join(', ')}</span></p>
+  <div class="lesson">
+  <h2>A proven use case</h2><p>${esc(p.useCase)}</p>
+  <h2>What you build</h2><p>${esc(p.build)}</p>
+  <h2>Data</h2><p>${esc(p.data)}</p>
+  <h2>Milestones</h2>
+  <ul class="tests">${p.steps.map((s, i) => `<li><label><input type="checkbox" data-i="${i}" ${store.milestone(p.id, i) ? 'checked' : ''}> <span>${esc(s)}</span></label></li>`).join('')}</ul>
+  <p class="muted small" id="pstat"></p>
+  <h2>Proof to publish</h2>${list(p.proof)}
+  <h2>How to talk about it in an interview</h2>${list(p.talk)}
+  </div>
+  <h2>Topics you need for this project</h2>
+  <div class="grid">${p.topics.map(topicById).filter(Boolean).map(card).join('')}</div>`;
+  const stat = () => { app.querySelector('#pstat').textContent = `${store.projectDone(p.id, p.steps.length)} of ${p.steps.length} done. Each milestone earns 10 XP the first time you tick it.`; };
+  app.querySelectorAll('[data-i]').forEach(c => c.onchange = () => { store.toggleMilestone(p.id, +c.dataset.i); stat(); });
+  stat();
 }
 
 /* ---------- Topic ---------- */
@@ -121,7 +188,11 @@ function pathView(pane, t) {
   const cur = t.path.findIndex((l, i) => !store.lessonDone(`${t.id}:${i}`));
   const node = (href, dot, title, sub, cls = '', i = 0) => `<a class="node ${cls}" style="--o:${[0, 1, 2, 1][i % 4]}" href="${href}"><span class="dot">${dot}</span><span><b>${esc(title)}</b><small>${sub}</small></span></a>`;
   const allDone = cur < 0;
-  pane.innerHTML = `<p class="muted">Work down the path. Each lesson takes about five minutes.</p><div class="path">
+  const projs = PROJECTS.filter(p => p.topics.includes(t.id));
+  const real = t.uses.length || projs.length ? `<div class="card"><b>Where this is used</b>
+    ${t.uses.length ? `<ul>${t.uses.map(u => `<li>${esc(u)}</li>`).join('')}</ul>` : ''}
+    ${projs.length ? `<p class="small">Prove it with a project: ${projs.map(p => `<a href="#/project/${p.id}">${esc(p.title)}</a>`).join(' · ')}</p>` : ''}</div>` : '';
+  pane.innerHTML = `${real}<p class="muted">Work down the path. Each lesson takes about five minutes.</p><div class="path">
     ${t.path.map((l, i) => { const done = store.lessonDone(`${t.id}:${i}`); return node(`#/topic/${t.id}/learn?l=${i}`, done ? '✓' : i + 1, l.title, `${levelOf(i, n)} · ${l.steps.length} steps${i === cur ? ' · <b>start here</b>' : ''}`, (done ? 'done ' : '') + (i === cur ? 'cur' : ''), i); }).join('')}
     ${t.tasks.length ? node(`#/topic/${t.id}/practice`, '⌨', 'Write real code', `${t.tasks.filter(k => store.task(k.id).best === 1).length} of ${t.tasks.length} tasks solved`, t.tasks.every(k => store.task(k.id).best === 1) ? 'done' : allDone ? 'cur' : '', n) : ''}
     ${t.quiz.length ? node(`#/topic/${t.id}/quiz`, '?', 'Checkpoint quiz', store.state.quiz[t.id] ? `Best ${Math.round(store.state.quiz[t.id].best * 100)}%` : 'Test yourself', store.state.quiz[t.id]?.best >= 0.8 ? 'done' : '', n + 1) : ''}

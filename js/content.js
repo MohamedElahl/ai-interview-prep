@@ -24,6 +24,7 @@ import pDeploy from '../content/paths/deploy.js';
 import pSpecial from '../content/paths/special.js';
 import pFusion from '../content/paths/fusion.js';
 import pCareer from '../content/paths/career.js';
+import { ROLES, USES } from '../content/roles.js';
 
 const PATHS = { ...pFoundations, ...pMl, ...pDl, ...pSequence, ...pGenai, ...pAgents, ...pProduction, ...pDeploy, ...pSpecial, ...pFusion, ...pCareer };
 
@@ -38,30 +39,29 @@ export const MODULES = [
   { id: 'deploy', title: 'Deployment: C++, GPU, ECU and cloud', topics: deploy },
   { id: 'special', title: 'Computer vision and NLP', topics: special },
   { id: 'fusion', title: 'Sensor fusion and perception', topics: fusion },
-  { id: 'career', title: 'Interview skills, Egypt and remote', topics: career }
+  { id: 'career', title: 'Interview skills and job search', topics: career }
 ];
 
-export const TRACKS = [
-  { id: 'all', name: 'All roles' },
-  { id: 'mle', name: 'ML Engineer' },
-  { id: 'ds', name: 'Data Scientist' },
-  { id: 'genai', name: 'GenAI / LLM Engineer' },
-  { id: 'mlops', name: 'MLOps' },
-  { id: 'nlp', name: 'NLP' },
-  { id: 'cv', name: 'Computer Vision' },
-  { id: 'auto', name: 'Automotive / Perception' },
-  { id: 'da', name: 'Data Analyst' }
-];
+export { ROLES, PROJECTS, projectById, roleById, roleTopics } from '../content/roles.js';
 
+// "All roles" plus one entry per target job. A topic belongs to a job if the job's roadmap lists it.
+export const TRACKS = [{ id: 'all', name: 'All roles' }, ...ROLES.map(r => ({ id: r.id, name: r.title }))];
+
+// A topic may set `group` to appear under another module; its summary still loads from its own file.
 export const TOPICS = MODULES.flatMap(m => m.topics.map(t => ({
-  tasks: [], quiz: [], interview: [], tracks: ['all'], ...t, module: m.id, path: PATHS[t.id] || []
+  tasks: [], quiz: [], interview: [], ...t, module: t.group || m.id, file: m.id,
+  path: PATHS[t.id] || [], uses: t.uses || USES[t.id] || []
 })));
 
 export const LEVELS = ['Zero', 'Core', 'Advanced', 'Hero'];
 export const levelOf = (i, n) => LEVELS[Math.min(3, Math.floor(i * 4 / Math.max(n, 1)))];
 
 export const topicById = id => TOPICS.find(t => t.id === id);
-export const inTrack = (t, tr) => tr === 'all' || t.tracks.includes('all') || t.tracks.includes(tr);
+export const inTrack = (t, tr) => {
+  if (tr === 'all') return true;
+  const r = ROLES.find(x => x.id === tr);
+  return !r || r.stages.some(st => st.topics.includes(t.id));
+};
 
 /** Look up one path step from its id "topic:lesson:step" (used by the review pile). */
 export function stepById(id) {
@@ -72,7 +72,7 @@ export function stepById(id) {
 
 const cache = {};
 export async function loadLesson(t) {
-  cache[t.module] ??= fetch(`content/${t.module}.md`)
+  cache[t.file] ??= fetch(`content/${t.file}.md`)
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
     .then(text => {
       const parts = text.split(/^===\s*([\w-]+)\s*===\s*$/m);
@@ -80,6 +80,6 @@ export async function loadLesson(t) {
       for (let i = 1; i < parts.length; i += 2) map[parts[i]] = parts[i + 1].trim();
       return map;
     });
-  try { return (await cache[t.module])[t.id] || '*Summary coming soon.*'; }
-  catch (e) { delete cache[t.module]; return 'Could not load this summary (' + e.message + '). Check your connection and reload.'; }
+  try { return (await cache[t.file])[t.id] || '*Summary coming soon.*'; }
+  catch (e) { delete cache[t.file]; return 'Could not load this summary (' + e.message + '). Check your connection and reload.'; }
 }
