@@ -166,12 +166,19 @@ pre.fillq .slot{min-width:4em}
 .prov input{width:100%}
 label{flex-wrap:wrap;min-width:0}
 .row select{min-width:0;max-width:100%}
+#nav .ic,#nav .short{display:none}
 @media (max-width:640px){
   h1{font-size:1.4rem}
-  .top{flex-wrap:wrap;row-gap:4px}
   .brand{flex:1}
-  #nav{order:3;flex-basis:100%}
-  #nav a{padding:5px 8px;font-size:.9rem}
+  /* Phone: the menu becomes a fixed tab bar at the bottom, like most mobile apps. */
+  #nav{position:fixed;left:0;right:0;bottom:0;z-index:10;display:grid;grid-template-columns:repeat(5,1fr);gap:0;
+    background:var(--panel);border-top:1px solid var(--line);padding:4px 2px calc(4px + env(safe-area-inset-bottom));overflow:visible}
+  #nav a{display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 0;font-size:.7rem;border-radius:8px;min-width:0;white-space:nowrap}
+  #nav .ic{display:block;font-size:1.15rem;line-height:1.2}
+  #nav .full{display:none}
+  #nav .short{display:inline}
+  main{padding-bottom:96px}
+  .player #foot{position:sticky;bottom:60px;background:var(--bg);padding:2px 0 6px}
 }
 .topic.role{text-align:left;cursor:pointer;font:inherit;min-height:150px}
 .grid.roles{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
