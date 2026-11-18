@@ -1,6 +1,7 @@
 // Bite-size lesson player: one step at a time, instant feedback, missed steps come back once.
 import { store } from './store.js';
 import { md, inline, esc } from './md.js';
+import { reportLink, stepFields } from './report.js';
 
 const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const norm = s => String(s).toLowerCase().replace(/\s+/g, ' ').replace(/[.;]+$/, '').trim();
@@ -57,7 +58,8 @@ export function playLesson(root, { title, steps, lessonId, backHref, nextHref, n
     }
     bar.style.width = (100 * done / total) + '%';
     foot.innerHTML = `<div class="fb ${ok ? 'good' : 'bad'}"><div><b>${ok ? 'Correct' : 'Not quite'}</b>
-      ${ok || !answer ? '' : `<div class="ans">Answer: ${answer}</div>`}${s.w ? `<div>${inline(s.w)}</div>` : ''}</div>
+      ${ok || !answer ? '' : `<div class="ans">Answer: ${answer}</div>`}${s.w ? `<div>${inline(s.w)}</div>` : ''}
+      <div class="small">${reportLink(title, stepFields(s))}</div></div>
       <button class="primary">Continue</button></div>`;
     foot.querySelector('button').onclick = next;
     foot.querySelector('button').focus();
@@ -75,7 +77,7 @@ export function playLesson(root, { title, steps, lessonId, backHref, nextHref, n
     const code = s.code ? `<pre><code>${esc(s.code)}</code></pre>` : '';
     if (s.t === 'info') {
       stepEl.innerHTML = `<div class="card info"><h2>${inline(s.h)}</h2>${md(s.b)}</div>`;
-      foot.innerHTML = '<div class="fb"><span></span><button class="primary">Continue</button></div>';
+      foot.innerHTML = `<div class="fb"><span class="small">${reportLink(title, stepFields(s))}</span><button class="primary">Continue</button></div>`;
       foot.querySelector('button').onclick = () => { done++; next(); };
     } else if (s.t === 'mc' || s.t === 'tf') {
       const opts = s.t === 'tf' ? [{ text: 'True', ok: s.a === true }, { text: 'False', ok: s.a === false }]

@@ -12,6 +12,7 @@ Each topic has a short lesson, coding tasks with automatic tests, a quiz and int
 - **Endless practice**: generated exercises with fresh numbers every round, at three difficulties, for 62 topics. Answers are computed, so they always match the question.
 - **24 portfolio projects** built on use cases that companies run in production, each with a public dataset, milestones, what to publish and how to discuss it in an interview.
 - **197 coding tasks** in Python and SQL that run in the browser, with visible and hidden tests, labelled easy, medium or hard: 60 algorithm problems by pattern, 33 SQL problems and ML-from-scratch tasks.
+- **Report a mistake** from any question, coding task, summary or interview question: it opens a pre-filled GitHub issue, so errors can be fixed quickly.
 - **XP, levels, a daily goal, streaks** and a review pile of the steps you missed.
 - **Interactive demos** in the summaries: gradient descent, decision thresholds, graph search, convolution filters, box overlap, token sampling, sensor coverage and a radar-camera Kalman filter.
 - **Voice mock interviews**: 10 levelled questions per topic, read aloud; spoken answers scored on key points, pace and filler words. Choose Easy, Medium, Hard or Mixed.

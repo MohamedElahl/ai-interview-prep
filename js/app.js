@@ -10,6 +10,7 @@ import { renderInterview, stopSpeech } from './interview.js';
 import { renderSettings } from './settings.js';
 import { chat, hasProvider } from './llm.js';
 import { mountDemos } from './demos.js';
+import { reportLink } from './report.js';
 
 const app = document.getElementById('app');
 const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
@@ -145,6 +146,7 @@ function projectView(id) {
   <p class="muted small" id="pstat"></p>
   <h2>Proof to publish</h2>${list(p.proof)}
   <h2>How to talk about it in an interview</h2>${list(p.talk)}
+  <p class="small">${reportLink(`Project: ${p.title}`, [['Project id', p.id], ['Data', p.data], ['Milestones', p.steps.join('\n')]])}</p>
   </div>
   <h2>Topics you need for this project</h2>
   <div class="grid">${p.topics.map(topicById).filter(Boolean).map(card).join('')}</div>`;
@@ -174,14 +176,14 @@ async function topicView(id, tab, q) {
     pane.innerHTML = '<p class="muted">Loading…</p>';
     const text = await loadLesson(t);
     if (mine !== view) return;
-    pane.innerHTML = `<article class="lesson">${md(text)}</article>${nextLink}`;
+    pane.innerHTML = `<article class="lesson">${md(text)}</article><p class="small">${reportLink(`${t.title} · Summary`, [['Topic id', t.id]], 'Report a mistake in this summary')}</p>${nextLink}`;
     mountDemos(pane);
   } else if (tab === 'practice') practice(pane, t, Math.min(t.tasks.length - 1, Math.max(0, +q.get('i') || 0)));
   else if (tab === 'quiz') quiz(pane, t);
   else {
     pane.innerHTML = `<p><a class="btn primary" href="#/interview?topic=${t.id}">Practise these out loud</a></p>
     ${t.interview.map((x, i) => `<div class="q"><b>${i + 1}. ${esc(x.q)}</b>${x.level ? ` <span class="lv lv-${x.level}">${x.level}</span>` : ''}
-      <details><summary>Key points and model answer</summary><ul>${x.points.map(p => `<li>${esc(p[0])}</li>`).join('')}</ul><p>${esc(x.model)}</p></details></div>`).join('')}`;
+      <details><summary>Key points and model answer</summary><ul>${x.points.map(p => `<li>${esc(p[0])}</li>`).join('')}</ul><p>${esc(x.model)}</p><p class="small">${reportLink(`${t.title} · Interview question ${i + 1}`, [['Question', x.q], ['Level', x.level], ['Key points', x.points.map(p => `${p[0]}  [${p[1].join(', ')}]`).join('\n')], ['Model answer', x.model]])}</p></details></div>`).join('')}`;
   }
 }
 
@@ -293,6 +295,7 @@ function practice(pane, t, idx) {
     <button data-a="reset">Reset</button><button data-a="solution">Show solution</button><button data-a="hint">AI hint</button>
     <span id="status" class="muted small" aria-live="polite"></span></div>
   <div id="out"></div><div id="extra"></div>
+  <p class="small">${reportLink(`${t.title} · Code task: ${task.title}`, [['Task id', task.id], ['Level', task.level], ['Prompt', task.prompt], ['Reference solution', task.solution]], 'Report a problem with this task')}</p>
   ${idx + 1 < t.tasks.length ? `<p><a class="btn" href="#/topic/${t.id}/practice?i=${idx + 1}">Next task</a></p>` : t.quiz.length ? `<p><a class="btn" href="#/topic/${t.id}/quiz">Next: Quiz</a></p>` : ''}`;
   const $ = s => pane.querySelector(s);
   const ed = createEditor($('#ed'), { value: saved?.code ?? task.starter, mode: sql ? 'sql' : 'python', onChange: v => store.setTaskCode(task.id, v) });
