@@ -6,7 +6,7 @@ import { practiceSet, hasPractice } from './practice.js';
 import { parseJson } from './llm.js';
 import { runPython, runSql, gradeSql } from './runner.js';
 import { createEditor } from './editor.js';
-import { renderInterview, stopSpeech } from './interview.js';
+import { renderInterview, renderPastInterview, stopSpeech } from './interview.js';
 import { renderSettings } from './settings.js';
 import { chat, hasProvider } from './llm.js';
 import { mountDemos } from './demos.js';
@@ -38,7 +38,7 @@ function route() {
   else if (page === 'review') reviewView();
   else if (page === 'project') projectView(parts[1]);
   else if (page === 'playground') playground();
-  else if (page === 'interview') renderInterview(app, q);
+  else if (page === 'interview') q.has('past') ? renderPastInterview(app, q.get('past')) : renderInterview(app, q);
   else if (page === 'dashboard') dashboard();
   else if (page === 'settings') renderSettings(app);
   else app.innerHTML = '<h1>Page not found</h1><p><a href="#/">Back to topics</a></p>';
@@ -453,7 +453,7 @@ function dashboard() {
     return `<tr><td><a href="#/topic/${t.id}">${esc(t.title)}</a></td><td>${t.tasks.length ? `${done} / ${t.tasks.length}` : '–'}</td><td>${qz ? Math.round(qz.best * 100) + '%' : '–'}</td><td>${started ? pct + '%' : '<span class="muted">Not started</span>'}</td></tr>`;
   }).join('')).join('')}</table>
   <h2>Mock interviews</h2>
-  ${s.interviews.length ? `<table><tr><th>Date</th><th>Topic</th><th>Questions</th><th>Scoring</th><th>Score</th></tr>${s.interviews.slice(0, 15).map(i => `<tr><td>${new Date(i.date).toLocaleDateString()}</td><td>${esc(i.label)}</td><td>${i.n}</td><td>${i.mode === 'ai' ? 'AI' : 'Built-in'}</td><td>${i.score.toFixed(1)} / 10</td></tr>`).join('')}</table>` : '<p class="muted">None yet. <a href="#/interview">Start one</a>.</p>'}
+  ${s.interviews.length ? `<table><tr><th>Date</th><th>Topic</th><th>Questions</th><th>Scoring</th><th>Score</th><th></th></tr>${s.interviews.slice(0, 15).map(i => `<tr><td>${new Date(i.date).toLocaleDateString()}</td><td>${esc(i.label)}</td><td>${i.n}</td><td>${i.mode === 'ai' ? 'AI' : 'Built-in'}</td><td>${i.score.toFixed(1)} / 10</td><td><a href="#/interview?past=${encodeURIComponent(i.date)}">${i.log?.length ? 'Open' : 'View'}</a></td></tr>`).join('')}</table>` : '<p class="muted">None yet. <a href="#/interview">Start one</a>.</p>'}
   <h2>Your data</h2>
   <p class="muted small">Progress is saved in this browser only. Export it to move to another device. API keys are never included.</p>
   <div class="row"><button id="exp">Export progress</button><button id="imp">Import progress</button><button id="rst">Reset progress</button><input type="file" id="file" accept="application/json" hidden></div>`;

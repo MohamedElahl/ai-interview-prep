@@ -193,3 +193,13 @@ button.back{padding:0;font-size:.9rem;color:var(--accent)}
 a.report{color:var(--muted);text-decoration:none;white-space:nowrap}
 a.report:hover{color:var(--accent);text-decoration:underline}
 .fb .small{margin-top:4px}
+details.coach{margin-top:12px;border-top:1px solid var(--line);padding-top:8px}
+details.coach summary{font-weight:600}
+.coach .msgs{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.coach .msg{padding:8px 12px;border-radius:10px;background:var(--code-bg);max-width:92%}
+.coach .msg.user{align-self:flex-end;background:var(--accent-soft)}
+.coach .msg.err{color:var(--bad)}
+.coach .msg b{display:block;font-size:.8rem;color:var(--muted)}
+.coach .msg p:first-of-type{margin-top:2px}
+.coach .chatrow{flex-wrap:nowrap;align-items:stretch}
+.coach .chatrow textarea{min-height:44px;flex:1}

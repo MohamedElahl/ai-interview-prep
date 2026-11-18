@@ -13,7 +13,7 @@ export const PRESETS = {
 
 export function config(id) {
   const p = PRESETS[id], u = store.state.providers[id] || {};
-  return { id, ...p, enabled: !!u.enabled, key: u.key || '', base: (u.base || p.base).replace(/\/+$/, ''), model: u.model || p.model };
+  return { id, ...p, enabled: !!u.enabled, key: u.key || '', base: (u.base || p.base).replace(/\/+$/, ''), model: u.model || p.model, think: !!u.think };
 }
 const usable = c => c.enabled && c.base && c.model && (c.noKey || c.key);
 
@@ -49,8 +49,10 @@ async function call(c, system, messages) {
   const data = await http(c.base + '/chat/completions', {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...auth(c) },
-    body: JSON.stringify({ model: c.model, messages: [{ role: 'system', content: system }, ...messages] })
-  }, 120000);
+    // Local "thinking" models (for example Qwen 3.x) can think for minutes. Unless the user turned thinking on
+    // in Settings, ask Ollama to answer directly; with thinking on, wait much longer for the reply.
+    body: JSON.stringify({ model: c.model, messages: [{ role: 'system', content: system }, ...messages], ...(c.id === 'ollama' && !c.think ? { reasoning_effort: 'none' } : {}) })
+  }, c.id === 'ollama' && c.think ? 600000 : 120000);
   const text = data?.choices?.[0]?.message?.content;
   if (typeof text !== 'string') throw new Error('empty reply');
   return text.replace(/<think>[\s\S]*?<\/think>/g, '').trim(); // some local models print their reasoning
