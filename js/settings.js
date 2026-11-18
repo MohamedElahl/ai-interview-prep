@@ -91,12 +91,12 @@ export function renderSettings(root) {
         const models = await listModels(id);
         card.querySelector('datalist').innerHTML = models.map(m => `<option value="${esc(m)}">`).join('');
         say(models.length ? `${models.length} models found. Click the model box to choose one.` : 'No models found.', models.length ? 'ok' : 'warn');
-      } catch (e) { say(e.message, 'err'); }
+      } catch (e) { say(e.message + (id === 'ollama' && /reach/.test(e.message) ? '. Is Ollama running? If you just ran setx, quit Ollama from the system tray (right-click the icon, Quit) and start it again, then allow local network access if the browser asks.' : ''), 'err'); }
     };
     card.querySelector('[data-a=test]').onclick = async () => {
       say('Testing…');
       try { await testProvider(id); say('Working.', 'ok'); }
-      catch (e) { say(e.message, 'err'); }
+      catch (e) { say(e.message + (id === 'ollama' && /reach/.test(e.message) ? '. Is Ollama running? If you just ran setx, quit Ollama from the system tray (right-click the icon, Quit) and start it again, then allow local network access if the browser asks.' : ''), 'err'); }
     };
   });
 }
