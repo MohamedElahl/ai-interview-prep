@@ -2,6 +2,36 @@ import { store } from './store.js';
 import { esc } from './md.js';
 import { PRESETS, config, listModels, testProvider } from './llm.js';
 
+// Notes for the model dropdown. g: 0 recommended, 1 other chat model, 2 not usable for interviews.
+// Free-tier notes reflect Groq's free plan in late 2026, where gpt-oss and Qwen 27B share the same limits.
+const MODEL_NOTES = [
+  [/safeguard|guard/i, 2, 'Safety filter'],
+  [/whisper|transcri/i, 2, 'Speech to text'],
+  [/tts|orpheus|playai|speech/i, 2, 'Text to speech'],
+  [/embed/i, 2, 'Embeddings'],
+  [/gpt-oss-120b/i, 0, 'Recommended: best answers on the free tier'],
+  [/gpt-oss-20b/i, 0, 'Faster and lighter, a little less sharp'],
+  [/qwen.*(27b|32b|235b)/i, 0, 'Good alternative, free tier'],
+  [/compound/i, 1, 'Agent with web search: slower, fewer free requests a day'],
+  [/kimi/i, 1, 'Strong, but may not be on the free tier'],
+  [/llama-4/i, 1, 'May not be on the free tier'],
+  [/allam/i, 1, 'Arabic focused'],
+  [/gemini.*flash-lite/i, 0, 'Fastest Gemini, free tier'],
+  [/gemini.*flash/i, 0, 'Recommended: free tier'],
+  [/gemini.*pro/i, 1, 'Strongest Gemini, tighter free limits'],
+  [/:free$/i, 0, 'Free']
+];
+const rateModel = m => { const r = MODEL_NOTES.find(([re]) => re.test(m)); return r ? { g: r[1], note: r[2] } : { g: 1, note: '' }; };
+function modelOptions(models, current) {
+  const groups = [[], [], []];
+  for (const m of models) groups[rateModel(m).g].push(m);
+  groups[0].sort((a, b) => MODEL_NOTES.findIndex(([re]) => re.test(a)) - MODEL_NOTES.findIndex(([re]) => re.test(b)));
+  const opt = (m, off) => { const n = rateModel(m).note; return `<option value="${esc(m)}" ${m === current ? 'selected' : ''} ${off ? 'disabled' : ''}>${esc(m)}${n ? ' · ' + esc(n) : ''}</option>`; };
+  const head = models.includes(current) && rateModel(current).g < 2 ? '' : `<option value="" selected>${current ? esc(current) + (models.includes(current) ? ' (not a chat model)' : ' (not in the list)') : 'Pick one'}</option>`;
+  return head + [['Recommended', 0], ['Other chat models', 1], ['Not for interviews', 2]]
+    .filter(([, g]) => groups[g].length).map(([label, g]) => `<optgroup label="${label}">${groups[g].map(m => opt(m, g === 2)).join('')}</optgroup>`).join('');
+}
+
 export function renderSettings(root) {
   const s = store.state;
   const origin = location.origin;
@@ -93,9 +123,11 @@ export function renderSettings(root) {
         const models = await listModels(id);
         card.querySelector('datalist').innerHTML = models.map(m => `<option value="${esc(m)}">`).join('');
         const box = card.querySelector('[data-f=model]'), pick = card.querySelector('[data-a=pick]');
-        pick.innerHTML = (models.includes(box.value) ? '' : `<option value="">${box.value ? esc(box.value) + ' (not in the list)' : 'Pick one'}</option>`) + models.map(m => `<option ${m === box.value ? 'selected' : ''}>${esc(m)}</option>`).join('');
+        pick.innerHTML = modelOptions(models, box.value);
         pick.parentElement.hidden = !models.length;
         pick.onchange = () => { if (!pick.value) return; box.value = pick.value; box.dispatchEvent(new Event('change')); say(`Model set to ${pick.value}. Press Test to check it.`, 'ok'); };
+        const bad = rateModel(box.value);
+        if (bad.g === 2) { say(`${box.value} is not a chat model (${bad.note.toLowerCase()}). Choose one from the list above.`, 'warn'); return; }
         say(models.length ? `${models.length} models found. Choose one from the list above.` : 'No models found.', models.length ? 'ok' : 'warn');
       } catch (e) { say(e.message + (id === 'ollama' && /reach/.test(e.message) ? '. Is Ollama running? If you just ran setx, quit Ollama from the system tray (right-click the icon, Quit) and start it again, then allow local network access if the browser asks.' : ''), 'err'); }
     };
