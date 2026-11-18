@@ -163,7 +163,7 @@ pre.fillq .slot{min-width:4em}
 .barrow .bar{height:12px}
 .barrow span:last-child{text-align:right}
 .prov .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-top:8px}
-.prov input{width:100%}
+.prov .fields input{width:100%}
 label{flex-wrap:wrap;min-width:0}
 .row select{min-width:0;max-width:100%}
 #nav .ic,#nav .short{display:none}

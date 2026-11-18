@@ -58,6 +58,28 @@ async function call(c, system, messages) {
   return text.replace(/<think>[\s\S]*?<\/think>/g, '').trim(); // some local models print their reasoning
 }
 
+// Providers retire models, so a saved or default model name can stop working. When that happens,
+// pick the best chat model the provider still lists, save it, and try again once.
+const GONE = /model.{0,80}(not (be )?found|does not exist|decommissioned|deprecated|no longer|not supported|invalid)|unknown model/i;
+const NOT_CHAT = /whisper|tts|guard|embed|audio|speech|moderation|orpheus|playai|image|vision-preview|distil/i;
+const PREFER = [/gpt-oss-120b|llama-4-maverick|llama-3.d-70b|qwen3?-?(32b|235b)|kimi|gemini-[d.]+-flash$/i, /120b|70b|72b|32b|maverick|flash/i, /llama|qwen|gpt-oss|gemma|mistral|gemini/i];
+async function pickModel(c) {
+  const list = (await listModels(c.id)).filter(m => !NOT_CHAT.test(m) && m !== c.model);
+  for (const re of PREFER) { const m = list.find(x => re.test(x)); if (m) return m; }
+  return list[0] || '';
+}
+async function callWithFix(c, system, messages) {
+  try { return { text: await call(c, system, messages) }; }
+  catch (e) {
+    if (!GONE.test(e.message)) throw e;
+    const m = await pickModel(c).catch(() => '');
+    if (!m) throw e;
+    const text = await call({ ...c, model: m }, system, messages);
+    (store.state.providers[c.id] ||= {}).model = m; store.save();
+    return { text, switched: m };
+  }
+}
+
 /** Try each enabled provider in order. Returns {text, provider}. Throws if none works. */
 export async function chat({ system, messages }) {
   const list = activeProviders();
@@ -65,7 +87,7 @@ export async function chat({ system, messages }) {
   const errors = [];
   for (const c of list) {
     try {
-      const text = await call(c, system, messages);
+      const { text } = await callWithFix(c, system, messages);
       if (text) return { text, provider: c.name };
       errors.push(`${c.name}: empty reply`);
     } catch (e) { errors.push(`${c.name}: ${e.message}`); }
@@ -78,7 +100,7 @@ export async function testProvider(id) {
   if (!c.base) throw new Error('Add the server URL first');
   if (!c.model) throw new Error('Choose a model first');
   if (!c.noKey && !c.key) throw new Error('Add your API key first');
-  return call(c, 'You are a connection test.', [{ role: 'user', content: 'Reply with the single word: ready' }]);
+  return callWithFix(c, 'You are a connection test.', [{ role: 'user', content: 'Reply with the single word: ready' }]);
 }
 
 export async function listModels(id) {
