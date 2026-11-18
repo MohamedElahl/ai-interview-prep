@@ -40,6 +40,7 @@ export function renderSettings(root) {
         <input data-f="key" type="password" autocomplete="off" placeholder="${c.noKey ? 'API key (optional)' : 'API key'}" value="${esc(c.key)}" aria-label="API key">
         <input data-f="model" list="models-${id}" placeholder="Model name" value="${esc(c.model)}" aria-label="Model name"><datalist id="models-${id}"></datalist>
       </div>
+      <label class="pick" hidden>Choose a model <select data-a="pick"></select></label>
       <div class="row"><button data-a="models">Load models</button><button data-a="test">Test</button><span class="status small"></span></div>
       ${id === 'ollama' ? `<label class="small"><input type="checkbox" data-f="think" ${store.state.providers.ollama?.think ? 'checked' : ''}> Let the model think before answering. Slower (can take minutes on a laptop) and sometimes more careful on hard questions. Only affects models that can think, such as Qwen 3.x.</label>` : ''}
       ${id === 'ollama' ? `<details><summary>How to set up Ollama</summary>
@@ -91,7 +92,11 @@ export function renderSettings(root) {
       try {
         const models = await listModels(id);
         card.querySelector('datalist').innerHTML = models.map(m => `<option value="${esc(m)}">`).join('');
-        say(models.length ? `${models.length} models found. Click the model box to choose one.` : 'No models found.', models.length ? 'ok' : 'warn');
+        const box = card.querySelector('[data-f=model]'), pick = card.querySelector('[data-a=pick]');
+        pick.innerHTML = (models.includes(box.value) ? '' : `<option value="">${box.value ? esc(box.value) + ' (not in the list)' : 'Pick one'}</option>`) + models.map(m => `<option ${m === box.value ? 'selected' : ''}>${esc(m)}</option>`).join('');
+        pick.parentElement.hidden = !models.length;
+        pick.onchange = () => { if (!pick.value) return; box.value = pick.value; box.dispatchEvent(new Event('change')); say(`Model set to ${pick.value}. Press Test to check it.`, 'ok'); };
+        say(models.length ? `${models.length} models found. Choose one from the list above.` : 'No models found.', models.length ? 'ok' : 'warn');
       } catch (e) { say(e.message + (id === 'ollama' && /reach/.test(e.message) ? '. Is Ollama running? If you just ran setx, quit Ollama from the system tray (right-click the icon, Quit) and start it again, then allow local network access if the browser asks.' : ''), 'err'); }
     };
     card.querySelector('[data-a=test]').onclick = async () => {

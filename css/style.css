@@ -208,3 +208,9 @@ details.coach summary{font-weight:600}
 .forecast { display: flex; gap: 8px; align-items: flex-end; margin: 12px 0 4px; max-width: 420px; }
 .forecast > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; min-height: 100px; }
 .forecast i { display: block; width: 100%; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--accent, #4f7cff); }
+
+.prov .pick{display:flex;margin-top:8px}
+.prov .pick[hidden]{display:none}
+.prov .pick select{flex:1;min-width:0}
+.prov > label.small{flex-wrap:nowrap;align-items:flex-start;margin-top:8px}
+.prov > label.small input{margin-top:3px;flex:none}
