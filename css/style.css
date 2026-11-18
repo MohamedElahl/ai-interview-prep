@@ -203,3 +203,8 @@ details.coach summary{font-weight:600}
 .coach .msg p:first-of-type{margin-top:2px}
 .coach .chatrow{flex-wrap:nowrap;align-items:stretch}
 .coach .chatrow textarea{min-height:44px;flex:1}
+
+/* Review forecast on the Scores page */
+.forecast { display: flex; gap: 8px; align-items: flex-end; margin: 12px 0 4px; max-width: 420px; }
+.forecast > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; min-height: 100px; }
+.forecast i { display: block; width: 100%; min-height: 2px; border-radius: 4px 4px 0 0; background: var(--accent, #4f7cff); }

@@ -14,6 +14,7 @@ export function parseNum(raw) {
   return s === '' ? NaN : Number(s);
 }
 let keyHandler = null;
+const CARD = /^[\w-]+:\d+:\d+$/; // "topic:lesson:step", a question from a learning path
 
 export function stopPlayer() {
   if (keyHandler) document.removeEventListener('keydown', keyHandler);
@@ -21,7 +22,7 @@ export function stopPlayer() {
 }
 
 /** steps: [{t:'info'|'mc'|'tf'|'fill'|'type'|'order'|'match', ...}] */
-export function playLesson(root, { title, steps, lessonId, backHref, nextHref, nextLabel, review, noReview, onDone, doneTitle, backLabel }) {
+export function playLesson(root, { title, steps, lessonId, backHref, nextHref, nextLabel, review, ahead, noReview, onDone, doneTitle, backLabel }) {
   stopPlayer();
   const queue = steps.map((s, i) => ({ ...s, _id: s._id || `${lessonId}:${i}` }));
   const total = queue.length, exercises = queue.filter(s => s.t !== 'info').length;
@@ -51,9 +52,11 @@ export function playLesson(root, { title, steps, lessonId, backHref, nextHref, n
 
   const grade = (s, ok, answer) => {
     stepEl.querySelectorAll('button,input').forEach(b => b.disabled = true);
-    if (ok) { done++; if (review) store.clearReview(s._id); }
+    // Path questions are review cards. Only the first attempt in a session counts; practising ahead
+    // never pushes a card further out, but a miss still brings it back soon.
+    if (!noReview && !s.nr && !s.gen && CARD.test(s._id) && !wrong.has(s._id) && !(ahead && ok)) store.srsAnswer(s._id, ok);
+    if (ok) done++;
     else {
-      if (!noReview && !s.nr) store.addReview(s._id);
       if (wrong.has(s._id)) done++; else { wrong.add(s._id); queue.push(s); }
     }
     bar.style.width = (100 * done / total) + '%';
@@ -148,7 +151,7 @@ export function playLesson(root, { title, steps, lessonId, backHref, nextHref, n
       <div class="stats"><div class="stat"><b>+${xp} XP</b><span class="muted small">earned</span></div>
         <div class="stat"><b>${Math.round(acc * 100)}%</b><span class="muted small">first-try accuracy</span></div>
         <div class="stat"><b>🔥 ${store.streak()}</b><span class="muted small">day streak</span></div></div>
-      <p class="muted">${today >= goal ? 'Daily goal reached.' : `${goal - today} XP to today's goal.`}${wrong.size && !noReview ? ' The steps you missed are saved under Review.' : ''}</p>
+      <p class="muted">${today >= goal ? 'Daily goal reached.' : `${goal - today} XP to today's goal.`}${wrong.size && !noReview && !review ? ' The questions you missed come back in your next review.' : ''}${review ? ` ${store.srsDueCount() ? `${store.srsDueCount()} more due now.` : 'All caught up for now.'}` : ''}</p>
       <div class="row" style="justify-content:center">${nextHref ? `<a class="btn primary" href="${nextHref}">${esc(nextLabel || 'Next lesson')}</a>` : ''}<a class="btn" href="${backHref}">${esc(backLabel || 'Back to path')}</a></div>
     </div></div>`;
   }

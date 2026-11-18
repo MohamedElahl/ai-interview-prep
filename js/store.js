@@ -5,13 +5,25 @@ const defaults = () => ({
   providers: {}, primary: 'groq',
   voice: { tts: true, auto: true, rate: 1, lang: 'en-US', name: '' },
   scratch: '',
-  xp: 0, days: {}, lessons: {}, review: {}, goal: 30, projects: {}
+  xp: 0, days: {}, lessons: {}, review: {}, srs: {}, goal: 30, projects: {}
 });
 const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0;
+// Spaced repetition: each card sits in a box. A right answer moves it up one box and sets the next review
+// INTERVALS[box] days away; a wrong one sends it back to box 0, due again in 10 minutes.
+export const INTERVALS = [0, 1, 3, 7, 14, 30, 60, 120];
+export const MASTERED = 5; // box 5 and up: next review a month or more away
+export const dayStart = (days = 0) => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + days); return +d; };
+// Older versions kept a plain pile of missed steps: turn each into a card that is due now.
+function migrate(st) {
+  st.srs ||= {};
+  for (const id of Object.keys(st.review || {})) st.srs[id] ||= { b: 0, d: Date.now(), n: 0, l: 0 };
+  st.review = {};
+  return st;
+}
 const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 let s = defaults();
-const merge = saved => ({ ...defaults(), ...saved, voice: { ...defaults().voice, ...(saved.voice || {}) } });
+const merge = saved => migrate({ ...defaults(), ...saved, voice: { ...defaults().voice, ...(saved.voice || {}) } });
 try { s = merge(JSON.parse(localStorage.getItem(KEY) || '{}')); } catch { /* storage blocked: run in memory */ }
 let timer;
 
@@ -32,15 +44,45 @@ export const store = {
   },
   level() { return Math.floor(s.xp / 100) + 1; },
 
-  // Path lessons and the review pile
+  // Path lessons
   lessonDone(id) { return !!s.lessons[id]; },
   completeLesson(id, acc, xp) {
     const l = s.lessons[id] ||= { n: 0, best: 0 };
     l.n++; l.best = Math.max(l.best, acc);
     this.addXp(xp);
   },
-  addReview(id) { s.review[id] = 1; this.save(); },
-  clearReview(id) { delete s.review[id]; this.save(); },
+
+  // Spaced repetition review
+  srsAnswer(id, ok) {
+    const c = s.srs[id] ||= { b: 0, d: 0, n: 0, l: 0 };
+    c.n++;
+    if (ok) { c.b = Math.min(c.b + 1, INTERVALS.length - 1); c.d = dayStart(INTERVALS[c.b]); }
+    else { if (c.b > 0) c.l++; c.b = 0; c.d = Date.now() + 10 * 60000; }
+    this.save();
+  },
+  srsDrop(id) { delete s.srs[id]; this.save(); },
+  /** Card ids, soonest due first. With ahead, cards not yet due are included too. */
+  srsQueue(ahead = false) {
+    const now = Date.now();
+    return Object.entries(s.srs).filter(([, c]) => ahead || c.d <= now).sort((a, b) => a[1].d - b[1].d).map(([id]) => id);
+  },
+  srsDueCount() { const now = Date.now(); return Object.values(s.srs).filter(c => c.d <= now).length; },
+  srsNext() { const now = Date.now(), d = Object.values(s.srs).map(c => c.d).filter(x => x > now); return d.length ? Math.min(...d) : 0; },
+  srsStats() {
+    const cards = Object.values(s.srs), now = Date.now();
+    const forecast = Array.from({ length: 7 }, (_, i) => cards.filter(c => c.d < dayStart(i + 1) && (i === 0 || c.d >= dayStart(i))).length);
+    return { total: cards.length, mastered: cards.filter(c => c.b >= MASTERED).length, due: cards.filter(c => c.d <= now).length, forecast };
+  },
+  /** Questions from lessons finished before reviews existed: spread them over the next three days. */
+  srsSeed(idsOfLesson) {
+    let added = 0;
+    for (const lid of Object.keys(s.lessons)) {
+      if (!/^[\w-]+:\d+$/.test(lid)) continue;
+      for (const id of idsOfLesson(lid)) if (!s.srs[id]) s.srs[id] = { b: 1, d: dayStart(1 + (added++ % 3)), n: 0, l: 0 };
+    }
+    if (added) this.save();
+    return added;
+  },
 
   // Levelled quizzes: best score per level. The topic’s quiz score weights harder levels more.
   setQuizLevel(id, level, acc) {

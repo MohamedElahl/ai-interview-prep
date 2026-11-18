@@ -35,7 +35,7 @@ function route() {
   window.scrollTo(0, 0);
   if (!page) home();
   else if (page === 'topic') topicView(parts[1], parts[2] || '', q);
-  else if (page === 'review') reviewView();
+  else if (page === 'review') reviewView(q);
   else if (page === 'project') projectView(parts[1]);
   else if (page === 'playground') playground();
   else if (page === 'interview') q.has('past') ? renderPastInterview(app, q.get('past')) : renderInterview(app, q);
@@ -68,10 +68,10 @@ function statsStrip(label, pct) {
   </div>`;
 }
 function actionRow(topics) {
-  const next = nextLesson(topics), reviewN = Object.keys(store.state.review).length;
+  const next = nextLesson(topics), reviewN = store.srsDueCount();
   return `<div class="row">
     ${next ? `<a class="btn primary big" href="#/topic/${next.t.id}/learn?l=${next.i}">${store.topicScore(next.t).pathDone ? 'Continue' : 'Start'}: ${esc(next.t.title)}</a>` : ''}
-    ${reviewN ? `<a class="btn" href="#/review">Review ${reviewN} mistake${reviewN > 1 ? 's' : ''}</a>` : ''}
+    ${reviewN ? `<a class="btn" href="#/review">🔁 Review ${reviewN} due</a>` : ''}
     <a class="btn" href="#/interview">Mock interview</a></div>`;
 }
 function bindTracks() {
@@ -242,12 +242,29 @@ function lessonView(t, i) {
   });
 }
 
-function reviewView() {
-  const ids = Object.keys(store.state.review);
-  const steps = [];
-  for (const id of ids) { const s = stepById(id); if (s) steps.push(s); else store.clearReview(id); }
-  if (!steps.length) { app.innerHTML = '<h1>Review</h1><p class="muted">Nothing to review. Steps you get wrong in lessons are collected here.</p><p><a class="btn" href="#/">Back to topics</a></p>'; return; }
-  playLesson(app, { title: 'Review your mistakes', steps: steps.sort(() => Math.random() - 0.5).slice(0, 12), lessonId: 'review', backHref: '#/', review: true });
+const when = t => {
+  const days = Math.round((new Date(t).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 864e5);
+  return days <= 0 ? 'later today, at ' + new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : days === 1 ? 'tomorrow' : `in ${days} days`;
+};
+/** Spaced repetition: up to 15 due cards, soonest due first, mixed across topics. */
+function reviewView(q) {
+  const ahead = q.has('ahead'), steps = [];
+  for (const id of store.srsQueue(ahead)) {
+    if (steps.length >= 15) break;
+    const s = stepById(id);
+    if (s) steps.push(s); else store.srsDrop(id); // the question no longer exists
+  }
+  if (!steps.length) {
+    const st = store.srsStats(), nx = store.srsNext();
+    app.innerHTML = `<h1>Review</h1>
+      <p>${st.total ? `All caught up. Next review ${when(nx)}.` : 'No review cards yet.'}</p>
+      <p class="muted">Every question you answer in a lesson becomes a card. Get it right and it comes back after 1 day, then 3, 7, 14, 30, 60 and 120 days. Miss it and it starts again, back in 10 minutes.</p>
+      <div class="row">${st.total ? '<a class="btn primary" href="#/review?ahead=1">Practise ahead</a>' : ''}<a class="btn" href="#/">Back to topics</a></div>`;
+    return;
+  }
+  playLesson(app, { title: ahead ? 'Practise ahead' : 'Daily review', steps: steps.sort(() => Math.random() - 0.5), lessonId: 'review', backHref: '#/', backLabel: 'Back to topics', review: true, ahead,
+    nextHref: store.srsDueCount() > steps.length ? `#/review?r=${Date.now()}` : '', nextLabel: 'Keep reviewing',
+    doneTitle: () => 'Review done' });
 }
 
 async function aiPractice(t, level, status) {
@@ -428,6 +445,18 @@ function playground() {
 }
 
 /* ---------- Scores ---------- */
+function reviewStats() {
+  const r = store.srsStats();
+  if (!r.total) return '';
+  const max = Math.max(1, ...r.forecast), day = i => i === 0 ? 'Today' : i === 1 ? 'Tmrw' : new Date(Date.now() + i * 864e5).toLocaleDateString([], { weekday: 'short' });
+  return `<h2>Review</h2>
+  <div class="stats">
+    <div class="stat"><b>${r.total}</b><span class="muted small">Cards learned</span></div>
+    <div class="stat"><b>${r.mastered}</b><span class="muted small">Mastered (next review a month or more away)</span></div>
+    <div class="stat"><b>${r.due}</b><span class="muted small">Due now</span>${r.due ? '<a class="small" href="#/review">Review now</a>' : ''}</div>
+  </div>
+  <div class="forecast" role="img" aria-label="Cards due over the next 7 days: ${r.forecast.join(', ')}">${r.forecast.map((n, i) => `<div><span class="small">${n}</span><i style="height:${Math.round(60 * n / max)}px"></i><span class="small muted">${day(i)}</span></div>`).join('')}</div>`;
+}
 function dashboard() {
   const s = store.state;
   const rows = TOPICS.map(t => ({ t, ...store.topicScore(t) }));
@@ -444,6 +473,7 @@ function dashboard() {
     <div class="stat"><b>${solved} / ${total}</b><span class="muted small">Coding tasks solved</span></div>
     <div class="stat"><b>${ivAvg}</b><span class="muted small">Interview average (last 5), out of 10</span></div>
   </div>
+  ${reviewStats()}
   ${weak.length ? `<h2>Work on these next</h2><ul>${weak.map(r => `<li><a href="#/topic/${r.t.id}">${esc(r.t.title)}</a> · ${r.pct}%</li>`).join('')}</ul>` : ''}
   <h2>By topic</h2>
   <table><tr><th>Topic</th><th>Coding</th><th>Quiz</th><th>Score</th></tr>
@@ -467,9 +497,14 @@ function dashboard() {
   $('#imp').onclick = () => $('#file').click();
   $('#file').onchange = async e => {
     const f = e.target.files[0]; if (!f) return;
-    try { store.import(await f.text()); dashboard(); } catch (err) { alert('Could not import: ' + err.message); }
+    try { store.import(await f.text()); seedReviews(); dashboard(); } catch (err) { alert('Could not import: ' + err.message); }
   };
   $('#rst').onclick = () => { if (confirm('Delete all scores, saved code and interview history in this browser? This cannot be undone.')) { store.reset(); dashboard(); } };
 }
 
+/** Schedule questions from lessons that were finished before reviews existed. */
+function seedReviews() {
+  store.srsSeed(lid => { const [tid, li] = lid.split(':'); return (topicById(tid)?.path[+li]?.steps || []).map((x, si) => x.t !== 'info' && !x.nr && !x.gen ? `${lid}:${si}` : '').filter(Boolean); });
+}
+seedReviews();
 route();
