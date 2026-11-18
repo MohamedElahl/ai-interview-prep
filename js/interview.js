@@ -76,7 +76,8 @@ export function renderInterview(root, params) {
     <div class="row">
       <label>Topic <select id="iv-topic"><option value="">Mixed: ${esc(TRACKS.find(t => t.id === track)?.name || 'All roles')}</option>
         ${pool.map(t => `<option value="${t.id}" ${t.id === pre ? 'selected' : ''}>${esc(t.title)}</option>`).join('')}</select></label>
-      <label>Questions <select id="iv-n"><option>3</option><option selected>5</option><option>8</option></select></label>
+      <label>Questions <select id="iv-n"><option>3</option><option selected>5</option><option>8</option><option>10</option></select></label>
+      <label>Difficulty <select id="iv-lv"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option><option value="mixed" selected>Mixed, easy to hard</option></select></label>
     </div>
     <div class="row">
       <label><input type="radio" name="mode" value="free" ${ai ? '' : 'checked'}> Built-in scoring</label>
@@ -92,11 +93,17 @@ export function renderInterview(root, params) {
     const tid = root.querySelector('#iv-topic').value;
     const n = +root.querySelector('#iv-n').value;
     const src = tid ? [topicById(tid)] : pool;
+    const lv = root.querySelector('#iv-lv').value, rank = { easy: 0, medium: 1, hard: 2 };
     const all = src.flatMap(t => t.interview.map(q => ({ topic: t, q })));
+    // Questions without a level count as medium. If a level has too few, fill from the whole pool.
+    let picked = shuffle(all.filter(x => lv === 'mixed' || (x.q.level || 'medium') === lv)).slice(0, n);
+    if (picked.length < n) picked = [...picked, ...shuffle(all.filter(x => !picked.includes(x)))].slice(0, n);
+    if (lv === 'mixed') picked.sort((a, b) => rank[a.q.level || 'medium'] - rank[b.q.level || 'medium']);
+    const lvName = { easy: 'easy', medium: 'medium', hard: 'hard', mixed: 'mixed' }[lv];
     S = {
-      root, label: tid ? topicById(tid).title : 'Mixed', topicId: tid,
+      root, label: `${tid ? topicById(tid).title : 'Mixed'} · ${lvName}`, topicId: tid,
       mode: root.querySelector('[name=mode]:checked').value,
-      qs: shuffle(all).slice(0, n), i: 0, results: [], cur: null
+      qs: picked, i: 0, results: [], cur: null
     };
     if (!S.qs.length) return;
     showQuestion(true);

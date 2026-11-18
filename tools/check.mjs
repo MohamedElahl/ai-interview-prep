@@ -1,16 +1,20 @@
 // Content checker. Run from the project root:
-//   node tools/check.mjs [--lessons N] [--quiz N] [--practice] file...
+//   node tools/check.mjs [--lessons N] [--quiz N] [--interview N] [--tasks N] [--practice] file...
+// --interview N: each topic needs N+ interview questions, each with a level. --tasks N: N+ coding tasks, each with a level.
 // Path files (content/paths/*.js) are checked step by step; topic files (content/*.js)
 // are checked for quiz, interview and task shape. --practice checks the generators in js/practice.js.
 import { pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 
 const args = process.argv.slice(2);
-let minLessons = 0, quizSize = 0, practice = false;
+let minLessons = 0, quizSize = 0, minInterview = 0, minTasks = 0, practice = false;
+const taskIds = new Map();
 const files = [];
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--lessons') minLessons = +args[++i];
   else if (args[i] === '--quiz') quizSize = +args[++i];
+  else if (args[i] === '--interview') minInterview = +args[++i];
+  else if (args[i] === '--tasks') minTasks = +args[++i];
   else if (args[i] === '--practice') practice = true;
   else files.push(args[i]);
 }
@@ -71,8 +75,25 @@ for (const f of files) {
         if ((t.quiz || []).length < quizSize) fail(t.id, `quiz has ${(t.quiz || []).length} questions, need ${quizSize}`);
         for (const [lv, n] of Object.entries(levels)) if (n < Math.floor(quizSize / 3)) fail(t.id, `only ${n} ${lv} quiz questions, need ${Math.floor(quizSize / 3)}`);
       }
-      (t.interview || []).forEach((q, i) => { if (!(q.q && q.points?.length && q.model)) fail(`${t.id} interview ${i}`, 'needs q, points and model'); });
-      (t.tasks || []).forEach((k, i) => { if (!(k.id && k.title && k.prompt && k.starter && k.solution && (k.lang === 'sql' || k.tests?.length))) fail(`${t.id} task ${i}`, 'incomplete task'); });
+      const LV = ['easy', 'medium', 'hard'];
+      const iv = t.interview || [];
+      if (minInterview && iv.length < minInterview) fail(t.id, `${iv.length} interview questions, need ${minInterview}`);
+      const ivSeen = new Set();
+      iv.forEach((q, i) => {
+        const w = `${t.id} interview ${i}`;
+        if (!(q.q && q.points?.length >= 2 && q.model)) fail(w, 'needs q, 2+ points and a model answer');
+        if (q.points?.some(p => !(Array.isArray(p) && p[0] && Array.isArray(p[1]) && p[1].length && p[1].every(k => k === k.toLowerCase())))) fail(w, 'each point is [label, [lowercase keywords]]');
+        if (minInterview && !LV.includes(q.level)) fail(w, 'level must be easy, medium or hard');
+        if (ivSeen.has(q.q)) fail(w, 'duplicate question'); ivSeen.add(q.q);
+      });
+      const tk = t.tasks || [];
+      if (minTasks && tk.length < minTasks) fail(t.id, `${tk.length} coding tasks, need ${minTasks}`);
+      tk.forEach((k, i) => {
+        const w = `${t.id} task ${i}`;
+        if (!(k.id && k.title && k.prompt && k.starter && k.solution && (k.lang === 'sql' ? k.setup : k.tests?.length))) fail(w, 'incomplete task');
+        if (minTasks && !LV.includes(k.level)) fail(w, 'level must be easy, medium or hard');
+        if (taskIds.has(k.id)) fail(w, `task id ${k.id} already used in ${taskIds.get(k.id)}`); taskIds.set(k.id, t.id);
+      });
     }
   }
 }

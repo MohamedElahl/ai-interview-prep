@@ -13,6 +13,11 @@ import special from '../content/special.js';
 import fusion from '../content/fusion.js';
 import career from '../content/career.js';
 import extra from '../content/extra.js';
+import math from '../content/math.js';
+import coding1 from '../content/coding1.js';
+import coding2 from '../content/coding2.js';
+import sqlbank from '../content/sqlbank.js';
+import design from '../content/design.js';
 
 import pFoundations from '../content/paths/foundations.js';
 import pMl from '../content/paths/ml.js';
@@ -27,12 +32,20 @@ import pFusion from '../content/paths/fusion.js';
 import pCareer from '../content/paths/career.js';
 import pExtra1 from '../content/paths/extra1.js';
 import pExtra2 from '../content/paths/extra2.js';
+import pMath from '../content/paths/math.js';
+import pCoding1 from '../content/paths/coding1.js';
+import pCoding2 from '../content/paths/coding2.js';
+import pSqlbank from '../content/paths/sqlbank.js';
+import pDesign from '../content/paths/design.js';
 import { ROLES, USES } from '../content/roles.js';
 
-const PATHS = { ...pFoundations, ...pMl, ...pDl, ...pSequence, ...pGenai, ...pAgents, ...pProduction, ...pDeploy, ...pSpecial, ...pFusion, ...pCareer, ...pExtra1, ...pExtra2 };
+const PATHS = { ...pFoundations, ...pMl, ...pDl, ...pSequence, ...pGenai, ...pAgents, ...pProduction, ...pDeploy, ...pSpecial, ...pFusion, ...pCareer, ...pExtra1, ...pExtra2,
+  ...pMath, ...pCoding1, ...pCoding2, ...pSqlbank, ...pDesign };
 
 export const MODULES = [
   { id: 'foundations', title: 'Foundations', topics: foundations },
+  { id: 'math', title: 'Maths for ML', topics: math },
+  { id: 'coding', title: 'Coding interview practice', topics: [] },
   { id: 'ml', title: 'Core machine learning', topics: ml },
   { id: 'dl', title: 'Deep learning', topics: dl },
   { id: 'sequence', title: 'Time series and sequence models', topics: sequence },
@@ -44,7 +57,11 @@ export const MODULES = [
   { id: 'fusion', title: 'Sensor fusion and perception', topics: fusion },
   { id: 'career', title: 'Interview skills and job search', topics: career },
   // Topics added from course curricula; each sets `group` to appear in the module it belongs to.
-  { id: 'extra', title: 'More topics', topics: extra }
+  { id: 'extra', title: 'More topics', topics: extra },
+  { id: 'coding1', title: 'Coding patterns', topics: coding1 },
+  { id: 'coding2', title: 'Coding patterns', topics: coding2 },
+  { id: 'sqlbank', title: 'SQL practice', topics: sqlbank },
+  { id: 'design', title: 'System design cases', topics: design }
 ];
 
 export { ROLES, PROJECTS, projectById, roleById, roleTopics } from '../content/roles.js';

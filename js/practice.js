@@ -527,6 +527,66 @@ export const GENERATORS = {
   }
 };
 
+const det3 = m => m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+const mat = m => m.map(r => `[${r.join(', ')}]`).join('\n');
+
+Object.assign(GENERATORS, {
+  'linear-algebra'(L) {
+    if (L === 1) {
+      const a = [int(-4, 5), int(-4, 5), int(-4, 5)], b = [int(-4, 5), int(-4, 5), int(-4, 5)];
+      return num(`What is the dot product of [${list(a)}] and [${list(b)}]?`, sum(a.map((x, i) => x * b[i])), 'Multiply matching entries and add.');
+    }
+    if (L === 2) {
+      if (rnd() < 0.5) {
+        const A = [[int(-3, 4), int(-3, 4)], [int(-3, 4), int(-3, 4)]], v = [int(-3, 4), int(-3, 4)], r = int(0, 1);
+        return num(`A = [[${list(A[0])}], [${list(A[1])}]] and v = [${list(v)}]. What is entry ${r + 1} of A·v?`, A[r][0] * v[0] + A[r][1] * v[1], 'Row of A dotted with v.');
+      }
+      const n = int(2, 9), k = int(2, 9), m = int(2, 9);
+      return text(`A is ${n}×${k} and B is ${k}×${m}. What is the shape of A·B? Write it like (2, 3).`, shapeAns([n, m]), 'Inner dimensions must match and disappear.');
+    }
+    if (rnd() < 0.5) {
+      const A = [[int(-4, 6), int(-4, 6)], [int(-4, 6), int(-4, 6)]];
+      return num(`What is the determinant of the 2×2 matrix below?`, A[0][0] * A[1][1] - A[0][1] * A[1][0], 'ad − bc. Zero means the matrix is not invertible.', null, mat(A));
+    }
+    const M = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => int(-2, 3)));
+    return num('What is the determinant of the 3×3 matrix below?', det3(M), 'Expand along the first row (cofactor expansion).', null, mat(M));
+  },
+
+  calculus(L) {
+    if (L === 1) { const a = int(1, 6), n = int(2, 5), x = int(-3, 3); return num(`f(x) = ${a}x^${n}. What is f′(${x})?`, n * a * x ** (n - 1), `Power rule: f′(x) = ${n * a}x^${n - 1}.`); }
+    if (L === 2) { const a = int(1, 5), b = int(-5, 5), x = int(-3, 3); return num(`f(x) = (${a === 1 ? '' : a}x ${b < 0 ? '−' : '+'} ${Math.abs(b)})². What is f′(${x})? (chain rule)`, 2 * a * (a * x + b), 'Outer derivative 2u times inner derivative a.'); }
+    if (rnd() < 0.5) {
+      const c = int(-5, 5), x = int(-5, 8), lr = pick([0.1, 0.25, 0.5]);
+      return num(`Minimise f(x) = (x ${c < 0 ? '+' : '−'} ${Math.abs(c)})² by gradient descent. From x = ${x} with learning rate ${lr}, where is x after one step?`, x - lr * 2 * (x - c), 'x ← x − lr · 2(x − c).', 2);
+    }
+    const a = int(1, 4), b = int(1, 5), x = int(-3, 3), y = int(-3, 3);
+    return num(`f(x, y) = ${a === 1 ? '' : a}x²y + ${b === 1 ? '' : b}y. What is ∂f/∂x at (${x}, ${y})?`, 2 * a * x * y, 'Treat y as a constant: ∂f/∂x = 2·a·x·y.');
+  },
+
+  probability(L) {
+    if (L === 1) {
+      const vals = [int(0, 5), int(6, 10), int(11, 20)], p = pick([[0.5, 0.3, 0.2], [0.2, 0.5, 0.3], [0.1, 0.6, 0.3]]);
+      return num(`X takes the values ${list(vals)} with probabilities ${list(p)}. What is E[X]?`, sum(vals.map((v, i) => v * p[i])), 'Sum of value × probability.', 2);
+    }
+    if (L === 2) {
+      const n = pick([10, 20, 50, 100]), p = pick([0.1, 0.2, 0.3, 0.5]);
+      return rnd() < 0.5
+        ? num(`X ~ Binomial(n = ${n}, p = ${p}). What is the variance of X?`, n * p * (1 - p), 'Var = n·p·(1 − p).', 2)
+        : num(`X ~ Binomial(n = ${n}, p = ${p}). What is E[X]?`, n * p, 'E[X] = n·p.', 2);
+    }
+    const p = pick([[0.5, 0.5], [0.25, 0.25, 0.5], [0.25, 0.25, 0.25, 0.25], [0.5, 0.25, 0.125, 0.125], [0.9, 0.1]]);
+    return num(`What is the entropy, in bits, of the distribution (${list(p)})?`, -sum(p.map(x => x * Math.log2(x))), 'H = −Σ p·log2 p.', 2);
+  }
+});
+
+// Pattern and practice-bank topics reuse the closest existing generators.
+Object.assign(GENERATORS, {
+  'pat-arrays': GENERATORS.dsa, 'pat-pointers': GENERATORS.dsa, 'pat-stacks': GENERATORS.dsa, 'pat-search': GENERATORS.dsa,
+  'pat-intervals': GENERATORS.dsa, 'pat-trees': GENERATORS.dsa, 'pat-heaps': GENERATORS.dsa,
+  'pat-graphs': GENERATORS['algo-advanced'], 'pat-dp': GENERATORS['algo-advanced'], 'pat-backtracking': GENERATORS['algo-advanced'],
+  'sql-core': GENERATORS.sql, 'sql-analytics': GENERATORS.sql, 'design-cases': GENERATORS['ml-system-design']
+});
+
 /** One fresh exercise for a topic at level 1, 2 or 3, or null if the topic has no generator. */
 export function generate(id, level) {
   const g = GENERATORS[id];

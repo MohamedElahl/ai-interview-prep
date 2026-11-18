@@ -109,7 +109,7 @@ function roleHome(role) {
   <details><summary>What the interviews for this job look like</summary><ol>${role.rounds.map(r => `<li>${esc(r)}</li>`).join('')}</ol></details>
   <h2>Your roadmap</h2>
   <p class="muted">Work through the stages in order. Each topic goes from zero to interview level.</p>
-  ${role.stages.map((st, i) => `<h3>Stage ${i + 1} · ${esc(st.name)}</h3><div class="grid">${st.topics.map(topicById).filter(Boolean).map(card).join('')}</div>`).join('')}
+  ${role.stages.map(st => ({ ...st, ts: st.topics.map(topicById).filter(Boolean) })).filter(st => st.ts.length).map((st, i) => `<h3>Stage ${i + 1} · ${esc(st.name)}</h3><div class="grid">${st.ts.map(card).join('')}</div>`).join('')}
   <h2>Projects that prove it</h2>
   <p class="muted">Each project is built on a use case that companies run in production, with a well-known public dataset. Finish them and you have evidence to show, not only claims.</p>
   <div class="grid">${role.projects.map(projectById).filter(Boolean).map(projectCard).join('')}</div>`;
@@ -180,7 +180,7 @@ async function topicView(id, tab, q) {
   else if (tab === 'quiz') quiz(pane, t);
   else {
     pane.innerHTML = `<p><a class="btn primary" href="#/interview?topic=${t.id}">Practise these out loud</a></p>
-    ${t.interview.map((x, i) => `<div class="q"><b>${i + 1}. ${esc(x.q)}</b>
+    ${t.interview.map((x, i) => `<div class="q"><b>${i + 1}. ${esc(x.q)}</b>${x.level ? ` <span class="lv lv-${x.level}">${x.level}</span>` : ''}
       <details><summary>Key points and model answer</summary><ul>${x.points.map(p => `<li>${esc(p[0])}</li>`).join('')}</ul><p>${esc(x.model)}</p></details></div>`).join('')}`;
   }
 }
@@ -285,7 +285,7 @@ function practice(pane, t, idx) {
   const task = t.tasks[idx], sql = task.lang === 'sql';
   const saved = store.state.tasks[task.id];
   pane.innerHTML = `
-  <div class="chips">${t.tasks.map((k, i) => { const b = store.task(k.id).best; return `<a class="pill ${i === idx ? 'on' : ''} ${b === 1 ? 'done' : ''}" href="#/topic/${t.id}/practice?i=${i}">${i + 1}. ${esc(k.title)}${b === 1 ? ' ✓' : ''}</a>`; }).join('')}</div>
+  <div class="chips">${t.tasks.map((k, i) => { const b = store.task(k.id).best; return `<a class="pill ${i === idx ? 'on' : ''} ${b === 1 ? 'done' : ''}" href="#/topic/${t.id}/practice?i=${i}">${i + 1}. ${esc(k.title)}${k.level ? ` <span class="lv lv-${k.level}">${k.level}</span>` : ''}${b === 1 ? ' ✓' : ''}</a>`; }).join('')}</div>
   <div class="prompt">${md(task.prompt)}</div>
   ${sql ? `<details><summary>Show the tables</summary><pre><code>${esc(task.setup.trim())}</code></pre></details>` : ''}
   <div class="editor" id="ed"></div>

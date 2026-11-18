@@ -10,10 +10,12 @@ export const ROLES = [
     rounds: ['Coding: data structures and algorithms in Python', 'ML fundamentals and metrics', 'ML system design', 'A past project in depth', 'Behavioural'],
     stages: [
       { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa', 'algo-advanced', 'sql', 'stats'] },
+      { name: 'Maths for ML', topics: ['linear-algebra', 'calculus', 'probability'] },
+      { name: 'Coding interview practice', topics: ['pat-arrays', 'pat-pointers', 'pat-stacks', 'pat-search', 'pat-intervals', 'pat-trees', 'pat-graphs', 'pat-heaps', 'pat-dp', 'pat-backtracking', 'sql-core'] },
       { name: 'Core machine learning', topics: ['ml-fundamentals', 'metrics', 'linear-models', 'trees', 'feature-eng', 'unsupervised'] },
       { name: 'Deep learning', topics: ['nn-basics', 'pytorch', 'training', 'transformers'] },
       { name: 'Modern AI systems', topics: ['llm-basics', 'rag', 'timeseries', 'ts-transformers', 'recsys', 'rl'] },
-      { name: 'Production', topics: ['data-pipelines', 'mlops', 'cloud-deploy', 'ml-system-design', 'quantization', 'responsible-ai'] },
+      { name: 'Production', topics: ['data-pipelines', 'mlops', 'cloud-deploy', 'ml-system-design', 'quantization', 'responsible-ai', 'design-cases'] },
       INTERVIEW
     ],
     projects: ['churn-prediction', 'fraud-detection', 'model-api', 'recsys', 'fairness-audit', 'rl-agent']
@@ -24,9 +26,11 @@ export const ROLES = [
     rounds: ['SQL and Python on real data', 'Statistics and A/B testing', 'ML fundamentals and metrics', 'A business case study', 'Behavioural'],
     stages: [
       { name: 'Data foundations', topics: ['python', 'dev-tools', 'sql', 'stats', 'data-viz'] },
+      { name: 'Maths for ML', topics: ['linear-algebra', 'calculus', 'probability'] },
+      { name: 'Coding interview practice', topics: ['pat-arrays', 'pat-pointers', 'pat-search', 'pat-heaps', 'pat-dp', 'sql-core', 'sql-analytics'] },
       { name: 'Core machine learning', topics: ['ml-fundamentals', 'metrics', 'linear-models', 'trees', 'feature-eng', 'unsupervised'] },
       { name: 'Forecasting and deep learning', topics: ['timeseries', 'ts-transformers', 'recsys', 'nn-basics', 'pytorch', 'llm-basics'] },
-      { name: 'From model to impact', topics: ['data-pipelines', 'mlops', 'ml-system-design', 'responsible-ai'] },
+      { name: 'From model to impact', topics: ['data-pipelines', 'mlops', 'ml-system-design', 'responsible-ai', 'design-cases'] },
       INTERVIEW
     ],
     projects: ['churn-prediction', 'ab-test', 'customer-segmentation', 'demand-forecast', 'fraud-detection', 'fairness-audit']
@@ -37,7 +41,8 @@ export const ROLES = [
     rounds: ['Live SQL', 'Statistics and experiment reading', 'A take-home analysis with a short presentation', 'Behavioural'],
     stages: [
       { name: 'Tools', topics: ['sql', 'python', 'dev-tools', 'feature-eng'] },
-      { name: 'Reasoning with data', topics: ['stats', 'data-viz', 'metrics'] },
+      { name: 'Coding interview practice', topics: ['sql-core', 'sql-analytics', 'pat-arrays'] },
+      { name: 'Reasoning with data', topics: ['stats', 'data-viz', 'metrics', 'probability'] },
       { name: 'First models', topics: ['ml-fundamentals', 'linear-models', 'unsupervised', 'timeseries'] },
       INTERVIEW
     ],
@@ -49,10 +54,12 @@ export const ROLES = [
     rounds: ['Coding in Python', 'LLM fundamentals: tokens, prompting, RAG, fine-tuning', 'Design an LLM application', 'Evaluation and safety', 'Behavioural'],
     stages: [
       { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa'] },
+      { name: 'Maths for ML', topics: ['linear-algebra', 'probability'] },
+      { name: 'Coding interview practice', topics: ['pat-arrays', 'pat-pointers', 'pat-stacks', 'pat-search', 'pat-trees', 'pat-graphs', 'pat-heaps', 'pat-dp'] },
       { name: 'ML and deep learning essentials', topics: ['ml-fundamentals', 'metrics', 'nn-basics', 'pytorch', 'transformers'] },
       { name: 'LLM applications', topics: ['llm-basics', 'rag', 'agents-eval', 'nlp', 'generative-models'] },
       { name: 'Agents', topics: ['agent-arch', 'agent-prod'] },
-      { name: 'Production', topics: ['cloud-deploy', 'mlops', 'quantization', 'ml-system-design', 'responsible-ai'] },
+      { name: 'Production', topics: ['cloud-deploy', 'mlops', 'quantization', 'ml-system-design', 'responsible-ai', 'design-cases'] },
       INTERVIEW
     ],
     projects: ['rag-assistant', 'lora-summariser', 'tool-agent', 'fairness-audit']
@@ -63,8 +70,9 @@ export const ROLES = [
     rounds: ['Coding and scripting', 'Containers, cloud and CI/CD', 'Design a training and serving platform', 'Monitoring and incident scenarios', 'Behavioural'],
     stages: [
       { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa', 'sql'] },
+      { name: 'Coding interview practice', topics: ['pat-arrays', 'pat-pointers', 'pat-graphs', 'pat-heaps', 'sql-core'] },
       { name: 'Enough ML to operate it', topics: ['ml-fundamentals', 'metrics', 'pytorch', 'training'] },
-      { name: 'Platform', topics: ['data-pipelines', 'mlops', 'cloud-deploy', 'ml-system-design'] },
+      { name: 'Platform', topics: ['data-pipelines', 'mlops', 'cloud-deploy', 'ml-system-design', 'design-cases'] },
       { name: 'Performance and cost', topics: ['cuda-gpu', 'quantization', 'edge-deploy', 'agent-prod'] },
       INTERVIEW
     ],
@@ -76,6 +84,8 @@ export const ROLES = [
     rounds: ['Coding in Python (often with numpy)', 'Deep learning and CNN fundamentals', 'Detection, segmentation and metrics', 'Camera geometry', 'A past project and deployment constraints'],
     stages: [
       { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa', 'algo-advanced'] },
+      { name: 'Maths for ML', topics: ['linear-algebra', 'calculus', 'probability'] },
+      { name: 'Coding interview practice', topics: ['pat-arrays', 'pat-pointers', 'pat-search', 'pat-trees', 'pat-graphs', 'pat-dp'] },
       { name: 'ML and deep learning', topics: ['ml-fundamentals', 'metrics', 'nn-basics', 'pytorch', 'training'] },
       { name: 'Vision', topics: ['cv-basics', 'cv-detection', 'cv-geometry', 'transformers', 'generative-models'] },
       { name: 'Deployment', topics: ['quantization', 'edge-deploy', 'cpp-deploy', 'cuda-gpu'] },
@@ -89,9 +99,11 @@ export const ROLES = [
     rounds: ['Coding in Python', 'Text representations and transformers', 'Fine-tuning and evaluation', 'Design a language system', 'Behavioural'],
     stages: [
       { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa', 'stats'] },
+      { name: 'Maths for ML', topics: ['linear-algebra', 'probability'] },
+      { name: 'Coding interview practice', topics: ['pat-arrays', 'pat-pointers', 'pat-stacks', 'pat-trees', 'pat-heaps', 'pat-dp'] },
       { name: 'ML and deep learning', topics: ['ml-fundamentals', 'metrics', 'nn-basics', 'pytorch', 'training'] },
       { name: 'Language', topics: ['nlp', 'rnn', 'transformers', 'llm-basics'] },
-      { name: 'Applications', topics: ['rag', 'agents-eval', 'mlops', 'responsible-ai'] },
+      { name: 'Applications', topics: ['rag', 'agents-eval', 'mlops', 'responsible-ai', 'design-cases'] },
       INTERVIEW
     ],
     projects: ['text-classifier', 'lora-summariser', 'rag-assistant']
@@ -102,9 +114,11 @@ export const ROLES = [
     rounds: ['Coding in Python and C++', 'Deep learning and detection', 'Kalman filtering and tracking', 'Sensors and fusion architecture', 'Embedded deployment and safety'],
     stages: [
       { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa', 'algo-advanced'] },
+      { name: 'Maths for ML', topics: ['linear-algebra', 'calculus', 'probability'] },
+      { name: 'Coding interview practice', topics: ['pat-arrays', 'pat-pointers', 'pat-search', 'pat-graphs', 'pat-heaps', 'pat-dp'] },
       { name: 'ML and deep learning', topics: ['ml-fundamentals', 'metrics', 'nn-basics', 'pytorch', 'training'] },
       { name: 'Vision', topics: ['cv-basics', 'cv-detection', 'cv-geometry'] },
-      { name: 'Sensors, tracking and fusion', topics: ['sensors', 'kalman', 'fusion-arch', 'localization-planning'] },
+      { name: 'Sensors, tracking and fusion', topics: ['sensors', 'kalman', 'fusion-arch', 'localization-planning', 'design-cases'] },
       { name: 'Embedded deployment', topics: ['quantization', 'cpp-deploy', 'edge-deploy', 'ecu-deploy'] },
       INTERVIEW
     ],
@@ -116,6 +130,8 @@ export const ROLES = [
     rounds: ['Coding in C or C++ and Python', 'ML fundamentals', 'Quantisation and model compression', 'Embedded constraints: memory, timing, fixed point', 'A deployment you have done'],
     stages: [
       { name: 'Programming foundations', topics: ['python', 'dev-tools', 'dsa'] },
+      { name: 'Maths for ML', topics: ['linear-algebra', 'calculus'] },
+      { name: 'Coding interview practice', topics: ['pat-arrays', 'pat-pointers', 'pat-stacks', 'pat-search', 'pat-dp'] },
       { name: 'Models that fit small devices', topics: ['ml-fundamentals', 'metrics', 'trees', 'nn-basics', 'pytorch', 'training'] },
       { name: 'Signals and images', topics: ['timeseries', 'rnn', 'cv-basics'] },
       { name: 'Deployment', topics: ['quantization', 'edge-deploy', 'cpp-deploy', 'cuda-gpu', 'ecu-deploy'] },
