@@ -124,7 +124,7 @@ async function aiGrade(question, keyPoints, answer, wantFollow) {
     score: Math.max(0, Math.min(10, Math.round(Number(j.score) || 0))),
     strengths: [].concat(j.strengths || []).map(String).filter(x => !TRANSCRIPT_TALK.test(x)).slice(0, 3),
     improvements: [].concat(j.improvements || []).map(String).filter(x => !TRANSCRIPT_TALK.test(x)).slice(0, 3),
-    spoken: String(j.spoken || '').split(/(?<=[.!?])s+/).filter(x => !TRANSCRIPT_TALK.test(x)).join(' '), follow: String(j.follow_up || ''), provider
+    spoken: String(j.spoken || '').split(/(?<=[.!?])\s+/).filter(x => !TRANSCRIPT_TALK.test(x)).join(' '), follow: String(j.follow_up || ''), provider
   };
 }
 
