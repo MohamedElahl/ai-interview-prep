@@ -508,3 +508,26 @@ function seedReviews() {
 }
 seedReviews();
 route();
+
+/* ---------- Updates ---------- */
+// The published site carries a version (see tools/stamp.mjs). When a newer one is out, offer a reload
+// instead of letting the browser keep using its saved copy. Progress is not affected.
+const VERSION = document.querySelector('meta[name=app-version]')?.content;
+let dismissed = '';
+async function checkVersion() {
+  if (!VERSION || document.getElementById('update')) return;
+  try {
+    const { version } = await (await fetch('version.json', { cache: 'no-store' })).json();
+    if (!version || version === VERSION || version === dismissed) return;
+    const bar = document.createElement('div');
+    bar.id = 'update'; bar.className = 'update'; bar.setAttribute('role', 'status');
+    bar.innerHTML = '<span>A new version of the site is available.</span><button class="primary">Reload</button><button class="ghost" aria-label="Dismiss">✕</button>';
+    const [reload, dismiss] = bar.querySelectorAll('button');
+    reload.onclick = () => location.replace(location.pathname + '?v=' + encodeURIComponent(version) + location.hash);
+    dismiss.onclick = () => { dismissed = version; bar.remove(); };
+    document.body.append(bar);
+  } catch { /* offline or local copy: nothing to do */ }
+}
+checkVersion();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkVersion(); });
+setInterval(checkVersion, 20 * 60000);

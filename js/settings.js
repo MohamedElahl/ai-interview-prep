@@ -136,7 +136,7 @@ export function renderSettings(root) {
       try {
         const r = await testProvider(id);
         if (r.switched) card.querySelector('[data-f=model]').value = r.switched;
-        say(r.switched ? `Working. The model you had is no longer available, so it now uses ${r.switched}.` : 'Working.', 'ok');
+        say(r.switched ? `Working. The model you had can't be used for chat (retired, or not a chat model), so it now uses ${r.switched}.` : 'Working.', 'ok');
       }
       catch (e) { say(e.message + (id === 'ollama' && /reach/.test(e.message) ? '. Is Ollama running? If you just ran setx, quit Ollama from the system tray (right-click the icon, Quit) and start it again, then allow local network access if the browser asks.' : ''), 'err'); }
     };

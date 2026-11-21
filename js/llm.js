@@ -64,7 +64,7 @@ async function call(c, system, messages) {
 
 // Providers retire models, so a saved or default model name can stop working. When that happens,
 // pick the best chat model the provider still lists, save it, and try again once.
-const GONE = /model.{0,80}(not (be )?found|does not exist|decommissioned|deprecated|no longer|not supported|invalid)|unknown model/i;
+const GONE = /model.{0,80}(not (be )?found|does not exist|decommissioned|deprecated|no longer|not supported|does not support chat|invalid)|unknown model|not a chat model/i;
 const NOT_CHAT = /whisper|tts|guard|embed|audio|speech|moderation|orpheus|playai|image|vision-preview|distil/i;
 const PREFER = [/gpt-oss-120b|llama-4-maverick|llama-3.d-70b|qwen3?-?(32b|235b)|kimi|gemini-[d.]+-flash$/i, /120b|70b|72b|32b|maverick|flash/i, /llama|qwen|gpt-oss|gemma|mistral|gemini/i];
 async function pickModel(c) {

@@ -214,3 +214,8 @@ details.coach summary{font-weight:600}
 .prov .pick select{flex:1;min-width:0}
 .prov > label.small{flex-wrap:nowrap;align-items:flex-start;margin-top:8px}
 .prov > label.small input{margin-top:3px;flex:none}
+
+/* New-version bar */
+.update{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:10px 12px 10px 16px;border-radius:12px;background:var(--panel);color:var(--fg);border:1px solid var(--line);box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.update span{flex:1;min-width:0}
+@media (max-width:640px){.update{bottom:76px;width:calc(100% - 32px)}}
